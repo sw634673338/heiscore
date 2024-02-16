@@ -43,7 +43,7 @@ heiscore’s four functions:
 # Install the heiscore package from GitHub
 install.packages("devtools")
 library(devtools)
-install_github("author/package")
+install_github("abhrastat/heiscore")
 ```
 
 ## Example
