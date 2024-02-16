@@ -1,12 +1,36 @@
 Package: heiscore
-Title: What the Package Does (One Line, Title Case)
-Version: 0.0.0.9000
-Authors@R: 
-    person("First", "Last", , "first.last@example.com", role = c("aut", "cre"),
-           comment = c(ORCID = "YOUR-ORCID-ID"))
-Description: What the package does (one paragraph).
-License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
-    license
+Title: Score and Plot Healthy Eating Index Scores from National Health and
+    Nutrition Examination Survey Data
+Version: 0.0.0-0
+Authors@R: c(
+    person("Vijetha", "Ramdas", , "vramdas06@gmail.com", role = c("aut", "cre")),
+    person("Berkeley", "Ho", , "berknho@utexas.edu", role = "aut"),
+    person("Abhra", "Sarkar", , "abhra.stat@gmail.com", role = "aut")
+  )
+Description: Calculate and visualize Healthy Eating Index (HEI) scores
+    from National Health and Nutrition Examination Survey 24-hour dietary
+    recall data utilizing three National Cancer Institute-recommended
+    methods. Effortlessly analyze HEI scores across different demographic
+    groups and years.
+License: MIT + file LICENSE
+Depends: 
+    R (>= 2.10)
+Imports: 
+    dplyr,
+    ggplot2,
+    ggpubr,
+    ggradar,
+    grDevices,
+    magrittr,
+    RColorBrewer,
+    rlang,
+    shiny,
+    shinythemes,
+    stats,
+    stringr,
+    tibble,
+    tidyr,
+    utils
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
