@@ -40,10 +40,8 @@ heiscore’s four functions:
 ## Installation
 
 ``` r
-# Install the heiscore package from GitHub
-install.packages("devtools")
-library(devtools)
-install_github("abhrastat/heiscore")
+# Install the heiscore package from CRAN
+install.packages("heiscore")
 ```
 
 ## Example

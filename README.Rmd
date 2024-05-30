@@ -33,10 +33,9 @@ heiscore's four functions:
 ## Installation
 
 ```{r, eval = FALSE}
-# Install the heiscore package from GitHub
-install.packages("devtools")
-library(devtools)
-install_github("author/package")
+# Install the heiscore package from CRAN
+install.packages("heiscore")
+
 ```
 
 ## Example

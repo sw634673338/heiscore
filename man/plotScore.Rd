@@ -35,12 +35,12 @@ plotScore(
 
 \item{raceEthnicity}{a vector of races/ethnicities in desired subpopulation. Provide a vector including any combination of the following: "Asian", "White", "Black", "Other", "Mexican American", "Other Hispanic",}
 
-\item{age}{a vector in the form c(min, max) with two numbers specifying the desired age range to analyze. Both numbers should either be ones (to represent the toddler age group including ages 12-23 months) or 2 and above.}
+\item{age}{a vector in the form c(min, max) with two numbers specifying the desired age range to analyze. Both numbers should either be between 0 and 1 or 2 and above.}
 
 \item{familyIncome}{a vector of family income brackets in the desired subpopulation. Provide a vector including any combination of the following: "[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)","[75000, 100000)", "75000+",">100000", ">20000","<20000","Refused","Don't know", "NA"}
 }
 \value{
-A ggplot object with the specified plot
+A base R plot or a ggplot object with the specified plot
 }
 \description{
 This function plots HEI component or total scores using the inputted scoring method and graph type. The user can subset the data to only include subjects in specific demographic groups
@@ -57,8 +57,8 @@ library(rlang)
 library(stats)
 library(tidyr)
 
-# Plot the Total Dairy component score from the 2005-06 NHANES data using
-# the "Simple" method.
+# Plot the Total Dairy component score from the 2005-06 NHANES data using the
+# "Simple" method.
 
 dairy_plot <- plotScore(graph = "Histogram",
                         scoringMethod = "Simple",

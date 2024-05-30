@@ -1,7 +1,6 @@
 Package: heiscore
-Title: Score and Plot Healthy Eating Index Scores from National Health and
-    Nutrition Examination Survey Data
-Version: 0.0.0-0
+Title: Score and Plot the Healthy Eating Index from NHANES Data
+Version: 0.0.1
 Authors@R: c(
     person("Vijetha", "Ramdas", , "vramdas06@gmail.com", role = c("aut", "cre")),
     person("Berkeley", "Ho", , "berknho@utexas.edu", role = "aut"),
@@ -9,17 +8,20 @@ Authors@R: c(
   )
 Description: Calculate and visualize Healthy Eating Index (HEI) scores
     from National Health and Nutrition Examination Survey 24-hour dietary
-    recall data utilizing three National Cancer Institute-recommended
-    methods. Effortlessly analyze HEI scores across different demographic
-    groups and years.
+    recall data utilizing three methods recommended by the National Cancer
+    Institute (2024)
+    <https://epi.grants.cancer.gov/hei/hei-methods-and-calculations.html#:~:text=To%20use%20the%20simple%20HEI,the%20total%20scores%20across%20individuals.>.
+    Effortlessly analyze HEI scores across different demographic groups
+    and years.
 License: MIT + file LICENSE
 Depends: 
     R (>= 2.10)
 Imports: 
     dplyr,
+    fmsb,
     ggplot2,
     ggpubr,
-    ggradar,
+    graphics,
     grDevices,
     magrittr,
     RColorBrewer,
@@ -33,4 +35,4 @@ Imports:
     utils
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.3
+RoxygenNote: 7.3.1
