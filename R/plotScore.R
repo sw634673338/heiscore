@@ -8,10 +8,10 @@
 #' @param demographicGroup The demographic grouping by which the data should be scored. If scoringMethod = "Simple", choose NULL as the demographicGroup. Otherwise, choose from "Sex", "Race/Ethnicity", "Age", or "Family Income".
 #' @param sex a vector of the sexes in desired subpopulation. Provide a vector with "Female", "Male", or both.
 #' @param raceEthnicity a vector of races/ethnicities in desired subpopulation. Provide a vector including any combination of the following: "Asian", "White", "Black", "Other", "Mexican American", "Other Hispanic",
-#' @param age a vector in the form c(min, max) with two numbers specifying the desired age range to analyze. Both numbers should either be ones (to represent the toddler age group including ages 12-23 months) or 2 and above.
+#' @param age a vector in the form c(min, max) with two numbers specifying the desired age range to analyze. Both numbers should either be between 0 and 1 or 2 and above.
 #' @param familyIncome  a vector of family income brackets in the desired subpopulation. Provide a vector including any combination of the following: "[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)","[75000, 100000)", "75000+",">100000", ">20000","<20000","Refused","Don't know", "NA"
 #'
-#' @return A ggplot object with the specified plot
+#' @return A base R plot or a ggplot object with the specified plot
 #'
 #' @examples
 #' library(ggplot2)
@@ -25,8 +25,8 @@
 #' library(stats)
 #' library(tidyr)
 #'
-#' # Plot the Total Dairy component score from the 2005-06 NHANES data using
-#' # the "Simple" method.
+#' # Plot the Total Dairy component score from the 2005-06 NHANES data using the
+#' # "Simple" method.
 #'
 #' dairy_plot <- plotScore(graph = "Histogram",
 #'                         scoringMethod = "Simple",
@@ -87,11 +87,11 @@ plotScore <- function(graph = NULL, scoringMethod, years, heiComponent, demograp
                                       "Total Fruit" = "F_TOTAL",
                                       "Whole Fruits" = "FWHOLEFRT",
                                       "Total Vegetables" = "VTOTALLEG",
-                                      "Greens and Beans" = "VDRKGRLEG",
+                                      "Greens \u000Aand Beans" = "VDRKGRLEG",
                                       "Whole Grains" = "G_WHOLE",
                                       "Total Dairy" = "D_TOTAL",
                                       "Total Protein" = "PFALLPROTLEG",
-                                      "Seafood and Plant Proteins" = "PFSEAPLANTLEG",
+                                      "Seafood/Plant \u000AProteins" = "PFSEAPLANTLEG",
                                       "Fatty Acids" = "TFACIDS",
                                       "Refined Grains" = "G_REFINED",
                                       "Sodium" = "TSODI",
@@ -137,8 +137,8 @@ plotScore <- function(graph = NULL, scoringMethod, years, heiComponent, demograp
   if(!is.vector(age) | !length(age) == 2){
     stop("Enter a valid age subset option.")
   }
-  else if(any(age < 1)){
-    stop("Age subset option must be greater than or equal to 1.")
+  else if(any(age < 0)){
+    stop("Age subset option must be greater than 0.")
   }
   else if(age[1] < 2 & age[2] >=2){
     stop("Age subset cannot include both toddlers (< 2yrs) and non-toddlers (> 2yrs)")
@@ -199,7 +199,7 @@ plotScore <- function(graph = NULL, scoringMethod, years, heiComponent, demograp
       radarColors2 = grDevices::colorRampPalette(c("coral", "coral4"))
       radarColors = c(radarColors(12), radarColors2(5))
     } else if(demographicGroup=="Race/Ethnicity" | demographicGroup=="Sex"){
-      radarColors = RColorBrewer::brewer.pal(n=nrow(score_output), name="Dark2")
+      radarColors = RColorBrewer::brewer.pal(n=(nrow(score_output)+1), name="Dark2")
     } else{
       radarColors = grDevices::colorRampPalette(c("cadetblue3", "blue4"))
       radarColors = radarColors(nrow(score_output))
@@ -224,23 +224,28 @@ plotScore <- function(graph = NULL, scoringMethod, years, heiComponent, demograp
           ggplot2::theme(axis.text=ggplot2::element_text(color="black", size=11),
                          axis.title = ggplot2::element_text(face="bold", size=15))
         }
+      return(result_plot)
 
     } # end bar
 
     else if(graph == "Radar"){
       max_points <- as.vector(scoringStandards$max_points)
-      scaled_radar <- mapply("/", score_output[-c(1, 15)], max_points)
-      final_radar_data <- cbind(score_output[,1], scaled_radar)
-      colnames(final_radar_data)[-c(1)] <- names(variableList_heiComponents[-c(1)])
+      min_points <- c(rep(0, 13))
+      final_radar_data <- rbind(max_points, min_points, score_output[-c(1, 15)]) %>%
+        as.data.frame()
+      rownames(final_radar_data) <- c("Max", "Min", as.vector(unlist(score_output[,1])))
+
+      colnames(final_radar_data) <- names(variableList_heiComponents[-c(1)])
       demoVar <- rlang::sym(colnames(final_radar_data)[1])
 
-      result_plot <- ggradar::ggradar(final_radar_data, group.colours = radarColors, axis.label.size=3, grid.label.size=5) + ggplot2::guides(fill=ggplot2::guide_colorbar()) +
-        ggplot2::labs(title=paste("Scores for Dietary Components by", varToComponent(demoVar))) +
-        ggplot2::theme(legend.text = ggplot2::element_text(size = 10),
-                       plot.margin = ggplot2::margin(.25,0,0,0,"cm"),
-                       plot.title = ggplot2::element_text(size=15),
-                       plot.title.position = "plot")
+
+      fmsb::radarchartcirc(final_radar_data, vlcex = .7, plwd = 3, plty = 1, pcol = radarColors, axistype = 2, axislabcol = "red", palcex = .7, cglcol = "gray", cglty = 3)
+      graphics::legend(
+        x = "left", legend = rownames(final_radar_data[-c(1,2),]), horiz = F,
+        bty = "n", pch = 20 , col = radarColors,
+        text.col = "black", cex = 1, pt.cex = 1.5
+      )
+
     } # end radar
   }
-  return(result_plot)
 }

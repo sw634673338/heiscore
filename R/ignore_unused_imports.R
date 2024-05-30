@@ -26,7 +26,9 @@ utils::globalVariables(c(
   "variableList_MCMC",
   "variableList_heiComponents",
   "xVarMax",
-  "prop"
+  "prop",
+  "recalls",
+  "kcal"
 ))
 
 ignore_unused_imports <- function(){

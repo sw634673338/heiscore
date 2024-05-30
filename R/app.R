@@ -2,7 +2,7 @@
 #'
 #' This function launches a Shiny application that allows users to visualize HEI scores calculated from National Health and Nutrition Examination Survey (NHANES) 24-hour dietary recall data.
 #'
-#' @return NULL
+#' @return No return value, launches interactive Shiny app
 #'
 #' @examples
 #' library(tidyr)
@@ -16,12 +16,75 @@
 #' library(grDevices)
 #' library(RColorBrewer)
 #' library(rlang)
+#' library(stats)
+#' library(graphics)
 #'
 #' runShinyApp()
+#'
+#' @section Shiny App Tab Information:
+#' \strong{Tab 1 - Variable Information:}
+#' The Variable Information tab provides additional
+#' information on dietary components and constituents.
+#'
+#' \strong{Tab 2 - Demographics:}
+#' The Demographics tab displays a bar chart that
+#' illustrates the distribution of the NHANES
+#' sample across categories including sex, race,
+#' age, and income. The chart is weighted to
+#' ensure the distribution is aligned with the
+#' demographics of the entire United States.
+#'
+#' Side Panel Options
+#' - Select Dataset: Choose the years that the data is from
+#' - Choose a Demographic: Pick a demographic category to view the distribution of
+#' - Select Sex/Race/Age Bracket/Income Bracket:Use the checkboxes to only use data from the desired demographic subgroup
+#'
+#' \strong{Tab 3 - Recalls:} The
+#' Recalls tab displays a histogram of
+#' the raw consumption of the selected
+#' food group, weighted to make the
+#' distribution representative of the
+#' United States.
+#'
+#' Side Panel Options
+#' - Select Dataset: Choose the years that the data is from
+#' - Select Component Type: Choose to view dietary components or constituents (explained in the Variable Information tab)
+#' - Select Variable: Pick a specific dietary component or constituent to view the distribution of
+#' - Select Sex/Race/Age Bracket/Income Bracket: Use the checkboxes to only use data from the desired demographic subgroup
+#'
+#' Below Plot Options
+#' - Select Plot Type: Choose the type of graph used to visualize the data
+#' - Options:
+#'   - Adjusted per 1000 Calories: When the checkbox is selected, the histogram will show the distribution of the amount of the chosen dietary component consumed per 1000 kcal in each recall
+#'   - Plot Average:  When the checkbox is selected, the histogram will show the distribution of the average of participants’ two recalls, if the individual participated in both recalls. Otherwise, the participant’s single recall will be used instead.
+#' - X-Axis Options:
+#'   - Keep X-Axis Constant for Recall Component: This option makes the x-axis bounds the same for the selected recall component across all years and demographic subsets.
+#'   - Make X-Axis Proportional to Maximum: This option sets the x-axis bounds from 0 to 20. The maximum recall value of the chosen food group within the selected year and demographic subgroup is set as 20, and all other recall values are assigned proportionally to the maximum value on a scale from 0 to 20.
+#'   - Raw Values: No adjustments are made to the x-axis bounds
+#' - Select Radar Plot Demographic: When the Plot Type is ‘Radar’, choose the demographic category by which the recalls will be categorized
+#'
+#' \strong{Tab 4 - Scoring:} The Scoring tab visualizes HEI scores from NHANES data. The graphs are weighted to make the distributions representative of the United States.
+#'
+#' Side Panel Options
+#' - Choose a Scoring Method: Select which HEI scoring method to implement.
+#' - Select Dataset: Choose the years that the data is from
+#' - Compare with a Second Dataset: Choose the years that the data for the optional second plot is from
+#' - Select Variable: Pick to view the total HEI score or one of the 13 individual component scores.
+#' - Select Age Group: Choose to include data either from Toddlers from 12-23 months old or older individuals since these two age groups have different HEI scoring standards.
+#' - Choose a Demographic: When the Scoring Method is ‘Mean Ratio’ or ‘Population Ratio’, choose the demographic category by which the scores will be categorized
+#' - Select Sex/Race/Age Bracket/Income Bracket: Use the checkboxes to only use data from the desired demographic subgroup
+#'
+#' Below Plot Options
+#' - Select a scoring display option: Choose the type of graph used to visualize the data
+
+#'
 #'
 #' @export
 
 runShinyApp <- function(){
+  oldpar <- graphics::par(no.readonly = TRUE)
+  on.exit(graphics::par(oldpar))
+
   if (interactive()) {
 
     #### Select/clean data, create ageBracket variable ####
@@ -70,35 +133,35 @@ runShinyApp <- function(){
     #####UI#####
     ui <- shiny::fluidPage(
       theme = shinythemes::shinytheme("cosmo"),
-      shiny::titlePanel('HEI Component Histograms'),
+      shiny::titlePanel("Visualizing the Healthy Eating Index"),
       shiny::tabsetPanel(
 
-        #### RECALLS PANEL ####
-        shiny::tabPanel('Recalls',
-                        shiny::sidebarLayout(
-                          shiny::sidebarPanel(
-                            shiny::selectInput("dataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected = "2017-18"),
-                            shiny::radioButtons("componentType", "Select Component Type",
-                                                choices = list("Dietary Constituents" = 1,
-                                                               "Dietary Components" = 2),
-                                                selected = 1),
-                            shiny::selectInput("variable", "Select Variable",
-                                               choices = variableList_heiComponents),
-                            shiny::checkboxGroupInput("sex", "Select Sex", choices = NULL),
-                            shiny::checkboxGroupInput("race", "Select Race", choices = NULL),
-                            shiny::checkboxGroupInput("age", "Select Age Bracket", choices = NULL),
-                            shiny::checkboxGroupInput("income", "Select Income Bracket", choices = NULL)
-                          ),
-                          shiny::mainPanel(shiny::plotOutput("myPlot"),
-                                           shiny::textOutput("num_observations"),
-                                           shiny::checkboxInput("adjusted_checkbox", 'Adjusted per 1000 calories', value=FALSE),
-                                           shiny::checkboxInput("average_checkbox", "Plot Average", value = FALSE),
-                                           shiny::radioButtons("x_axis_scaling", "Choose x-axis scale",
-                                                               choices = list("Keep X-Axis Constant for Recall Component (Regardless of Year or Demographic Group)" = 1,
-                                                                              "Make X-Axis Proportional to Maximum" = 2,
-                                                                              "Normal" = 3),
-                                                               selected = 1))
-                        )
+        #### VARIABLE INFORMATION PANEL ####
+        shiny::tabPanel('Variable Information',
+                        shiny::h3("Dietary Components"),
+                        shiny::p("The HEI is made up of 13 components. Of these, 9 are adequacy components (components that the DGA encourages individuals to consume in sufficient amounts), while the other 4 are moderations components (foods that should be consumed in moderation). Below are the 13 components, the foods they include, and the units they are listed in. The units only apply to the Recalls Tab."),
+                        shiny::br(),
+                        shiny::h4(shiny::strong("Adequacy")),
+                        shiny::p(shiny::strong("Total Fruits:"), "All fruit, including 100% fruit juice (in cups)"),
+                        shiny::p(shiny::strong("Whole Fruits:"), "All fruit, excluding 100% fruit juice (in cups)"),
+                        shiny::p(shiny::strong("Total Vegetables:"), "All vegetables, including legumes (in cups)"),
+                        shiny::p(shiny::strong("Greens and Beans:"), "Dark green vegetables and legumes (both in cups)"),
+                        shiny::p(shiny::strong("Whole Grains:"), "Whole grains (in ounces)"),
+                        shiny::p(shiny::strong("Dairy:"), "Milk and milk products, such as fluid milk, yogurt, and cheese, and fortified soy beverages (all in cups)"),
+                        shiny::p(shiny::strong("Total Protein Foods:"), "All protein foods including legumes (all in ounces)"),
+                        shiny::p(shiny::strong("Seafood and Plant Proteins:"), "Seafood, nuts, seeds, soy products (other than beverages), and legumes (all in ounces)"),
+                        shiny::p(shiny::strong("Fatty Acids:"), "Ratio of poly and monounsaturated fatty acids to saturated fatty acids"),
+                        shiny::br(),
+                        shiny::h4(shiny::strong("Moderation")),
+                        shiny::p(shiny::strong("Refined Grains:"), "Refined grains (in ounces)"),
+                        shiny::p(shiny::strong("Sodium:"), "Sodium (in milligrams)"),
+                        shiny::p(shiny::strong("Added Sugars:"), "Added sugars (in teaspoons)"),
+                        shiny::p(shiny::strong("Saturated Fats:"), "Saturated fatty acids (in grams)"),
+                        shiny::br(),
+                        shiny::h3("Dietary Constituents"),
+                        shiny::p("The Centers for Disease Control and Prevention (CDC) currently recommend using the Markov Chain Monte Carlo (MCMC) method, as developed by Zhang et. al (2011), to estimate usual intakes. This method uses a different breakdown of dietary constituents to evaluate intake. These constituents are not the same groups defined by the HEI's thirteen components. MCMC methods are not implemented here in this app's scoring functions."),
+                        shiny::br(),
+                        shiny::p("Zhang S, Midthune D, Guenther PM, Krebs-Smith SM, Kipnis V, Dodd KW, Buckman DW, Tooze JA, Freedman L, Carroll RJ (2011). A new multivariate measurement error model with zero-inflated dietary data, and its application to dietary assessment.", shiny::em("The Annals of Applied Statistics, 5,"), "1456-1487.")
         ),
 
         #### DEMOGRAPHICS PANEL ####
@@ -117,6 +180,44 @@ runShinyApp <- function(){
                           ),
                           shiny::mainPanel(shiny::plotOutput('demoPlot'),
                                            shiny::textOutput('demoNum_observations'))
+                        )
+        ),
+
+        #### RECALLS PANEL ####
+        shiny::tabPanel('Recalls',
+                        shiny::sidebarLayout(
+                          shiny::sidebarPanel(
+                            shiny::selectInput("dataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected = "2017-18"),
+                            shiny::radioButtons("componentType", "Select Component Type",
+                                                choices = list("Dietary Constituents" = 1,
+                                                               "Dietary Components" = 2),
+                                                selected = 1),
+                            shiny::selectInput("variable", "Select Variable",
+                                               choices = variableList_heiComponents),
+                            shiny::checkboxGroupInput("sex", "Select Sex", choices = NULL),
+                            shiny::checkboxGroupInput("race", "Select Race", choices = NULL),
+                            shiny::checkboxGroupInput("age", "Select Age Bracket", choices = NULL),
+                            shiny::checkboxGroupInput("income", "Select Income Bracket", choices = NULL)
+                          ),
+                          shiny::mainPanel(shiny::plotOutput("myPlot"),
+                                           shiny::br(),
+                                           shiny::br(),
+                                           shiny::br(),
+                                           #shiny::textOutput("num_observations"),
+                                           shiny::br(),
+                                           shiny::selectInput("recallPlotType", "Select Plot Type", choices = c("Histogram", "Radar"), selected = "Histogram"),
+                                           shiny::p(shiny::strong("Options")),
+                                           shiny::checkboxInput("adjusted_checkbox", 'Adjusted per 1000 Calories', value=FALSE),
+                                           shiny::checkboxInput("average_checkbox", "Plot Average", value = FALSE),
+                                           shiny::radioButtons("x_axis_scaling", "X-Axis Options",
+                                                               choices = list("Keep X-Axis Constant for Recall Component (Regardless of Year or Demographic Group)" = 1,
+                                                                              "Make X-Axis Proportional to Maximum" = 2,
+                                                                              "Raw Values" = 3),
+                                                               selected = 1), shiny::selectInput('recallDemographic', 'Select Radar Plot Demographic',
+                                                                                                 choices= list("Sex" = "SEX",
+                                                                                                               "Race" = "RACE_ETH",
+                                                                                                               "Age" = "ageBracket",
+                                                                                                               "Income" = "FAMINC")))
                         )
         ),
 
@@ -142,37 +243,19 @@ runShinyApp <- function(){
                             shiny::checkboxGroupInput('scoringIncome', 'Select Income', choices=NULL)
                           ),
                           shiny::mainPanel(shiny::plotOutput('scoringPlot'),
+                                           shiny::br(),
+                                           shiny::br(),
+                                           shiny::br(),
+                                           shiny::br(),
+                                           shiny::br(),
+                                           shiny::br(),
+                                           shiny::br(),
+                                           shiny::br(),
+                                           shiny::br(),
+                                           shiny::br(),
                                            shiny::textOutput('scoringNum_observations'),
                                            shiny::selectInput("scoringDisplay", "Select a scoring display option", choices = NULL))
                         )
-        ),
-
-        #### VARIABLE INFORMATION PANEL ####
-        shiny::tabPanel('Variable Information',
-                        shiny::h3("Healthy Eating Index Components"),
-                        shiny::p("The HEI is made up of 13 components. 9 of these are adequacy components (foods to eact more of for good health), while the other 4 are moderations components (foods to limit for good health. Below are the 13 components and the foods they include."),
-                        shiny::br(),
-                        shiny::h4(shiny::strong("Adequacy")),
-                        shiny::p(shiny::strong("Total Fruits:"), "All fruit, including 100% fruit juice"),
-                        shiny::p(shiny::strong("Whole Fruits:"), "All fruit, excluding 100% fruit juice"),
-                        shiny::p(shiny::strong("Total Vegetables:"), "All vegetables, including legumes"),
-                        shiny::p(shiny::strong("Greens and Beans:"), "Dark green vegetables and legumes"),
-                        shiny::p(shiny::strong("Whole Grains")),
-                        shiny::p(shiny::strong("Dairy:"), "Milk and milk products, such as fluid milk, yogurt, and cheese, and fortified soy beverages"),
-                        shiny::p(shiny::strong("Total Protein Foods:"), "All protein foods including legumes"),
-                        shiny::p(shiny::strong("Seafood and Plant Proteins:"), "Seafood, nuts, seeds, soy products (other than beverages), and legumes"),
-                        shiny::p(shiny::strong("Fatty Acids:"), "Ratio of poly- and monounsaturated fatty acids to saturated fatty acids"),
-                        shiny::br(),
-                        shiny::h4(shiny::strong("Moderation")),
-                        shiny::p(shiny::strong("Refined Grains")),
-                        shiny::p(shiny::strong("Sodium")),
-                        shiny::p(shiny::strong("Added Sugars")),
-                        shiny::p(shiny::strong("Saturated Fats")),
-                        shiny::br(),
-                        shiny::h3("Markov Chain Monte Carlo (MCMC) Method Components"),
-                        shiny::p("The MCMC method is used to estimate distributions of usual intake. For this method, each dietary constituent must be treated separately. For example, instead of the Greens and Beans HEI componenent, Dark Green Vegetables and Legumes are counted separately."),
-                        shiny::br(),
-                        shiny::p("\n*Note that recall data for Kcal and Fatty Acids ratio is not available when data is adjusted per 1000 calories")
         )
       )
     )
@@ -240,20 +323,31 @@ runShinyApp <- function(){
       })
 
       ###change recall variable choices based on MCMC or HEI component and when adjusted for kcal checkbox is selected (remove kcal and fatty acids)###
-      shiny::observeEvent(list(input$adjusted_checkbox, input$componentType), {
-        if(input$componentType == 1){
-          variableList = variableList_MCMC
-          adjChoices = 1
-        }
-        else{
-          variableList = variableList_heiComponents
-          adjChoices = c(1, 10)
-        }
+      shiny::observeEvent(list(input$adjusted_checkbox, input$componentType, input$recallPlotType), {
+        if(input$recallPlotType == "Histogram"){
+          if(input$componentType == 1){
+            variableList = variableList_MCMC
+            adjChoices = 1
+          }
+          else{
+            variableList = variableList_heiComponents
+            adjChoices = c(1, 10)
+          }
 
-        if(input$adjusted_checkbox){
-          shiny::updateSelectInput(session, "variable", choices = variableList[-(adjChoices)])
+          if(input$adjusted_checkbox){
+            shiny::updateSelectInput(session, "variable", choices = variableList[-(adjChoices)])
+          }
+          else{
+            shiny::updateSelectInput(session, "variable", choices = variableList)
+          }
         }
         else{
+          if(input$componentType == 1){
+            variableList = list( "All Consituents")
+          }
+          else{
+            variableList = list( "All Components")
+          }
           shiny::updateSelectInput(session, "variable", choices = variableList)
         }
       })
@@ -305,8 +399,12 @@ runShinyApp <- function(){
         if(input$scoringVariable == "Total Score" & (input$scoringMethod == "Mean Ratio"| input$scoringMethod == "Population Ratio")){
           shiny::updateSelectInput(session, "scoringDisplay", choices = c("Bar Plot", "Radar Plot"))
         }
-        else{
+        else if(input$scoringMethod == "Mean Ratio"| input$scoringMethod == "Population Ratio"){
           shiny::updateSelectInput(session, "scoringDisplay", choices = "Bar Plot")
+        }
+        else{
+          shiny::updateSelectInput(session, "scoringDisplay", choices = "Histogram")
+
         }
       })
 
@@ -331,79 +429,244 @@ runShinyApp <- function(){
       ###Create the plot from subset selected###
       output$myPlot <- shiny::renderPlot({
 
-        # Filter to demographics selected and only keep weight and selected recall columns
-        filtered_data <- selected_dataset() %>%
+        # Clean dataset to exclude people with 1 recall or people aged 0
+        # AND Filter to demographics selected
+        filtered_data <- selected_dataset()[selected_dataset()$WTDR2D != 0 & selected_dataset()$AGE >= 1,] %>%
+          tidyr::drop_na(WTDR2D) %>%
           dplyr::filter(SEX %in% input$sex,
                         RACE_ETH %in% input$race,
                         ageBracket %in% input$age,
-                        FAMINC %in% input$income) %>%
-          dplyr::select(WTDR2D, dplyr::contains(input$variable), DR1TKCAL, DR2TKCAL)
+                        FAMINC %in% input$income)
 
-        if(input$adjusted_checkbox){
-          #kcal per 1000 data
-          filtered_data <- filtered_data
-          filtered_data[,2] <- filtered_data[,2]/((filtered_data$DR1TKCAL)/1000)
-          filtered_data[,3] <- filtered_data[,3]/((filtered_data$DR2TKCAL)/1000)
-        }
-
-        filtered_data <- filtered_data %>%
-          dplyr::select(WTDR2D, dplyr::contains(input$variable)) %>%
-          tidyr::drop_na()
-
-        # If option to keep x-axis scale constant is selected
-        if(input$x_axis_scaling == 1){
-          x_upper_limit <- xVarMax(input$variable, all_datasets)
-        } else{
-          x_upper_limit <- NA
-        }
-
-        # if option to make x axis proportional to max is selected
-        if(input$x_axis_scaling == 2 & nrow(filtered_data) != 0){
-          max_recall <- max(filtered_data[,2:3], na.rm = TRUE)
+        if(input$recallPlotType == "Histogram"){
           filtered_data <- filtered_data %>%
-            dplyr::mutate_at(dplyr::vars(dplyr::contains(input$variable)), ~ (. / max_recall) * 20)
+            dplyr::select(WTDR2D, dplyr::contains(input$variable), DR1TKCAL, DR2TKCAL)
+
+          if(input$adjusted_checkbox){
+            #kcal per 1000 data
+            filtered_data <- filtered_data
+            filtered_data[,2] <- filtered_data[,2]/((filtered_data$DR1TKCAL)/1000)
+            filtered_data[,3] <- filtered_data[,3]/((filtered_data$DR2TKCAL)/1000)
+          }
+
+          filtered_data <- filtered_data %>%
+            dplyr::select(WTDR2D, dplyr::contains(input$variable)) %>%
+            tidyr::drop_na()
+
+          # If option to keep x-axis scale constant is selected
+          if(input$x_axis_scaling == 1){
+            x_upper_limit <- xVarMax(input$variable, all_datasets)
+          } else{
+            x_upper_limit <- NA
+          }
+
+          # if option to make x axis proportional to max is selected
+          if(input$x_axis_scaling == 2 & nrow(filtered_data) != 0){
+            max_recall <- max(filtered_data[,2:3], na.rm = TRUE)
+            filtered_data <- filtered_data %>%
+              dplyr::mutate_at(dplyr::vars(dplyr::contains(input$variable)), ~ (. / max_recall) * 20)
+          }
+
+          # If plot average is selected
+          if (input$average_checkbox) {
+
+            # Calculate average recalls
+            selected_columns <- ({
+              filtered_data %>%
+                dplyr::mutate(averages = rowMeans(dplyr::across(-1), na.rm = TRUE))
+            })
+
+            # Plot the average recalls
+            ggplot2::ggplot(selected_columns) +
+              ggplot2::geom_histogram(ggplot2::aes(x = averages, y=ggplot2::after_stat(count/sum(count)), weight = WTDR2D), bins = 30, boundary=0) +
+              ggplot2::ylab('Proportion') +
+              ggplot2::xlab(varToComponent(input$variable)) +
+              ggplot2::xlim(0, x_upper_limit) +
+              ggplot2::theme_classic() +
+              ggplot2::ggtitle(paste0('Weighted Histogram of ', varToComponent(input$variable), ' Recalls'))
+
+          }
+
+          # If plot averages is NOT selected
+          else{
+            # Create long a dataset with all recalls the selected component in one column
+            selected_columns <- ({
+              filtered_data %>%
+                tidyr::pivot_longer(!WTDR2D, names_to = "day", values_to = "recall") %>%
+                dplyr::select(recall, WTDR2D)
+            })
+
+            # Plot as individual recalls
+            ggplot2::ggplot(selected_columns) +
+              ggplot2::geom_histogram(ggplot2::aes(x = recall, y=ggplot2::after_stat(count/sum(count)), weight = WTDR2D), bins = 30, boundary=0) +
+              ggplot2::ylab('Proportion') +
+              ggplot2::xlab(varToComponent(input$variable)) +
+              ggplot2::xlim(0, x_upper_limit) +
+              ggplot2::theme_classic() +
+              ggplot2::ggtitle(paste0('Weighted Histogram of ', varToComponent(input$variable), ' Recalls'))
+
+          }
         }
-
-        # If plot average is selected
-        if (input$average_checkbox) {
-
-          # Calculate average recalls
-          selected_columns <- ({
-            filtered_data %>%
-              dplyr::mutate(averages = rowMeans(dplyr::across(-1), na.rm = TRUE))
-          })
-
-          # Plot the average recalls
-          ggplot2::ggplot(selected_columns) +
-            ggplot2::geom_histogram(ggplot2::aes(x = averages, y=ggplot2::after_stat(count/sum(count)), weight = WTDR2D), bins = 30, boundary=0) +
-            ggplot2::ylab('Proportion') +
-            ggplot2::xlab(varToComponent(input$variable)) +
-            ggplot2::xlim(0, x_upper_limit) +
-            ggplot2::theme_classic() +
-            ggplot2::ggtitle(paste0('Weighted Histogram of ', varToComponent(input$variable), ' Recalls'))
-
-        }
-
-        # If plot averages is NOT selected
+        ### Plot recalls as radar plot
         else{
-          # Create long a dataset with all recalls the selected component in one column
-          selected_columns <- ({
-            filtered_data %>%
-              tidyr::pivot_longer(!WTDR2D, names_to = "day", values_to = "recall") %>%
-              dplyr::select(recall, WTDR2D)
-          })
+          recallDemographicVariable <- rlang::sym(input$recallDemographic)
 
-          # Plot as individual recalls
-          ggplot2::ggplot(selected_columns) +
-            ggplot2::geom_histogram(ggplot2::aes(x = recall, y=ggplot2::after_stat(count/sum(count)), weight = WTDR2D), bins = 30, boundary=0) +
-            ggplot2::ylab('Proportion') +
-            ggplot2::xlab(varToComponent(input$variable)) +
-            ggplot2::xlim(0, x_upper_limit) +
-            ggplot2::theme_classic() +
-            ggplot2::ggtitle(paste0('Weighted Histogram of ', varToComponent(input$variable), ' Recalls'))
+          if(input$componentType == 1){
+            variableList = variableList_MCMC
+          }
+          else{
+            variableList = variableList_heiComponents
+          }
 
+          # initialize empty recall table
+          recallTable <- filtered_data %>%
+            dplyr::select(recallDemographicVariable) %>%
+            unique()
+
+          # initialize vector to store max points
+          maxPointVals <- c()
+
+          for(variables in variableList[-c(1)]){
+
+            # only include relevant variables
+            recallDataByVariable <- filtered_data %>%
+              dplyr::select(dplyr::contains(variables), dplyr::contains("KCAL"), WTDR2D, recallDemographicVariable) %>%
+              tidyr::drop_na()
+
+            # if selected, average the 2 recalls
+            if(input$average_checkbox){
+              recallDataByVariable <- recallDataByVariable %>%
+                dplyr::mutate(recalls = rowMeans(dplyr::across(c(1,2))),
+                              kcal = rowMeans(dplyr::across(c(3,4)))) %>%
+                dplyr::select(recalls, kcal, WTDR2D, recallDemographicVariable)
+            }
+            # otherwise, treat each recall separately
+            else{
+              recallDataByVariable <- recallDataByVariable %>%
+                tidyr::pivot_longer(cols = dplyr::contains(variables),
+                                names_to = "day",
+                                values_to = "recalls") %>%
+                dplyr::mutate(kcal = dplyr::case_when(startsWith(day, "DR1") ~ DR1TKCAL,
+                                                      TRUE ~ DR2TKCAL)) %>%
+                dplyr::select(recalls, kcal, WTDR2D, recallDemographicVariable)
+            }
+
+            # if selected, calculate recalls per 1000 kcal
+            if(input$adjusted_checkbox){
+              recallDataByVariable <- recallDataByVariable %>%
+                dplyr::mutate(recalls = dplyr::case_when(kcal > 0 ~ recalls / kcal * 1000,
+                                                         TRUE ~ 0)) %>%
+                dplyr::select(recalls, WTDR2D, recallDemographicVariable)
+            }
+            # otherwise, make no adjustment
+            else{
+              recallDataByVariable <- recallDataByVariable %>%
+                dplyr::select(recalls, WTDR2D, recallDemographicVariable)
+            }
+
+            # remove individuals above 95th percentile
+            maxCutoff <- stats::quantile(recallDataByVariable$recalls, c(.95))
+            recallDataByVariable <- recallDataByVariable %>%
+              dplyr::filter(recalls < maxCutoff | recalls == 0)
+
+            ### X-AXIS OPTIONS ###
+
+            # If option to keep x-axis scale constant is selected
+            if(input$x_axis_scaling == 1){
+              maxPoints <- xVarMax(variables, all_datasets, quartile = TRUE, kcal = input$adjusted_checkbox)
+            }
+
+            # if option to make x axis proportional to max is selected
+            else if(input$x_axis_scaling == 2){
+              # find max and min for scaling
+              maxRecall <- max(recallDataByVariable$recalls)
+              minRecall <- min(recallDataByVariable$recalls)
+
+              # scale to make proportional to max
+              recallDataByVariable <- recallDataByVariable %>%
+                dplyr::mutate(recalls = ((recalls - minRecall)/(maxRecall - minRecall)) * 20)
+
+              maxPoints <- max(recallDataByVariable$recalls)
+            }
+
+            # raw values x axis
+            else{
+              maxPoints <- max(recallDataByVariable$recalls)
+            }
+
+            # store max points in vector
+            maxPointVals <- c(maxPointVals, round(maxPoints, 2))
+
+            ### END X-AXIS OPTIONS ###
+
+            # take weighted mean within each group
+            recallDataByVariable <- recallDataByVariable %>%
+            dplyr::group_by(!!recallDemographicVariable) %>%
+              dplyr::summarise(meanRecall = stats::weighted.mean(recalls, WTDR2D))
+
+            # add correct column name and add to overall recall table
+            colnames(recallDataByVariable)[2] <- c(variables)
+
+            recallTable <- recallTable %>%
+              dplyr::right_join(., recallDataByVariable, by = input$recallDemographic)
+          } # end of variable loop
+
+          ### SET ORDER OF TABLE ROWS BY DEMOGRAPHIC VARIABLES ###
+          if(recallDemographicVariable == "ageBracket"){
+            recallTable$ageBracket <- factor(recallTable$ageBracket, levels = c("Toddler (12 - 23 mo.)", "[2,10)", "[10,20)", "[20,30)", "[30,40)", "[40,50)", "[50,60)", "[60,70)", "[70,80)", "80+" ))
+            recallTable <- recallTable %>% dplyr::arrange(ageBracket)
+          }
+
+          else if(recallDemographicVariable == "FAMINC"){
+            recallTable$FAMINC <- factor(recallTable$FAMINC, levels = c("[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)", "75000+" ,"[75000, 100000)", ">100000", "<20000", ">20000","Refused","Don't know", "NA"))
+            recallTable <- recallTable %>% dplyr::arrange(FAMINC)
+          }
+
+          else if(recallDemographicVariable == "SEX"){
+            recallTable <- recallTable %>% dplyr::arrange(SEX)
+          }
+
+          else{
+            recallTable <- recallTable %>% dplyr::arrange(RACE_ETH)
+          }
+          ### END OF SET ORDER OF TABLE ROWS BY DEMOGRAPHIC VARIABLES ###
+
+          # convert column names from variable names to words
+          colnames(recallTable)[-c(1)] <- lapply(colnames(recallTable)[-c(1)], varToComponent)
+
+          # set up recall table in format for fmsb radar plots
+          max_points <- maxPointVals
+
+          final_radar_data <- as.data.frame(recallTable[-c(1)]) %>%
+            rbind(max_points, min_points, .)
+          rownames(final_radar_data) <- c("Max", "Min", as.vector(unlist(recallTable[,1])))
+
+          demoVar <- rlang::sym(colnames(final_radar_data)[1])
+
+          # set colors for radar plots
+          if(input$recallDemographic=='FAMINC'){
+            radarColors = grDevices::colorRampPalette(c('cadetblue3', 'blue4'))
+            radarColors2 = grDevices::colorRampPalette(c('coral', 'coral4'))
+            radarColors = c(radarColors(12), radarColors2(5))
+          } else if(input$recallDemographic=='RACE_ETH' | input$recallDemographic=='SEX'){
+            if(nrow(recallDataByVariable) >= 3){radarColors = RColorBrewer::brewer.pal(n=nrow(recallDataByVariable), name='Dark2')}
+            else{
+              radarColors = RColorBrewer::brewer.pal(n=3, name='Dark2')
+            }
+          } else{
+            radarColors = grDevices::colorRampPalette(c('cadetblue3', 'blue4'))
+            radarColors = radarColors(nrow(recallDataByVariable))
+          }
+
+          # make a radar plot
+          fmsb::radarchartcirc(final_radar_data, vlcex = .7, plwd = 3, plty = 1, pcol = radarColors, axistype = 2, axislabcol = "red", palcex = .7, cglcol = "gray", cglty = 3)
+          graphics::legend(
+            x = "left", legend = rownames(final_radar_data[-c(1,2),]), horiz = F,
+            bty = "n", pch = 20 , col = radarColors,
+            text.col = "black", cex = 1, pt.cex = 1.5
+          )
         }
-      })
+      }, height = 500)
 
       ###Print number of observations on Recall Panel###
       output$num_observations <- shiny::renderText({
@@ -559,6 +822,7 @@ runShinyApp <- function(){
         ##### Mean Ratio AND Population Ratio Method Scoring #####
 
         else{
+
           #choose scoring method
           if(input$scoringMethod == "Mean Ratio"){
             scoringFunction <- meanRatioApp
@@ -567,6 +831,7 @@ runShinyApp <- function(){
           }
 
           if(input$scoringVariable == "Total Score"){
+            #bookmark
 
             #initialize an empty table for scoring data with correct demographic options
             scoresTable <- filtered_scoringData %>%
@@ -575,17 +840,10 @@ runShinyApp <- function(){
 
             #for loop calculates score for each variable and adds it to the total score
             for(variables in variableList_heiComponents[-c(1)]){
-              if(input$scoringDisplay == "Radar Plot"){
-                divForProportion = hei_standards_2020$max_points[hei_standards_2020$component == variables]
-              }
-              else{
-                divForProportion = 1
-              }
 
               scoringDataByVariable <- filtered_scoringData %>%
                 dplyr::select(dplyr::contains(variables), dplyr::contains("KCAL"), WTDR2D, scoringDemographicVariable) %>%
-                scoringFunction(., variables, scoringDemographicVariable, scoringStandards) %>%
-                dplyr::mutate(score = score / divForProportion)
+                scoringFunction(., variables, scoringDemographicVariable, scoringStandards)
 
               #add component score to total score
               scoresTable <- scoresTable %>%
@@ -594,16 +852,36 @@ runShinyApp <- function(){
                 tidyr::drop_na()
             }
 
+            ### SET ORDER OF TABLE ROWS BY DEMOGRAPHIC VARIABLES ###
+            if(scoringDemographicVariable == "ageBracket"){
+              scoresTable$ageBracket <- factor(scoresTable$ageBracket, levels = c("Toddler (12 - 23 mo.)", "[2,10)", "[10,20)", "[20,30)", "[30,40)", "[40,50)", "[50,60)", "[60,70)", "[70,80)", "80+" ))
+              scoresTable <- scoresTable %>% dplyr::arrange(ageBracket)
+            }
+
+            else if(scoringDemographicVariable == "FAMINC"){
+              scoresTable$FAMINC <- factor(scoresTable$FAMINC, levels = c("[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)", "75000+" ,"[75000, 100000)", ">100000", "<20000", ">20000","Refused","Don't know", "NA"))
+              scoresTable <- scoresTable %>% dplyr::arrange(FAMINC)
+            }
+
+            else if(scoringDemographicVariable == "SEX"){
+              scoresTable <- scoresTable %>% dplyr::arrange(SEX)
+            }
+
+            else{
+              scoresTable <- scoresTable %>% dplyr::arrange(RACE_ETH)
+            }
+            ### END OF SET ORDER OF TABLE ROWS BY DEMOGRAPHIC VARIABLES ###
+
             #colors for plots by demographic
             if(input$scoringDemographic=='FAMINC'){
               radarColors = grDevices::colorRampPalette(c('cadetblue3', 'blue4'))
               radarColors2 = grDevices::colorRampPalette(c('coral', 'coral4'))
               radarColors = c(radarColors(12), radarColors2(5))
             } else if(input$scoringDemographic=='RACE_ETH' | input$scoringDemographic=='SEX'){
-                if(nrow(scoringDataByVariable) >= 3){radarColors = RColorBrewer::brewer.pal(n=nrow(scoringDataByVariable), name='Dark2')}
-                else{
-                  radarColors = RColorBrewer::brewer.pal(n=3, name='Dark2')
-                }
+              if(nrow(scoringDataByVariable) >= 3){radarColors = RColorBrewer::brewer.pal(n=nrow(scoringDataByVariable), name='Dark2')}
+              else{
+                radarColors = RColorBrewer::brewer.pal(n=3, name='Dark2')
+              }
             } else{
               radarColors = grDevices::colorRampPalette(c('cadetblue3', 'blue4'))
               radarColors = radarColors(nrow(scoringDataByVariable))
@@ -613,20 +891,20 @@ runShinyApp <- function(){
             if(input$scoringDisplay == "Radar Plot"){
               colnames(scoresTable)[-c(1)] <- names(variableList_heiComponents[-c(1)]) #column names in proper display names from list
 
-              radar1 <- ggradar::ggradar(scoresTable, group.colours=radarColors, axis.label.size = 3, grid.label.size = 5) + ggplot2::guides(fill = ggplot2::guide_colorbar()) +
-                ggplot2::labs(title=paste0(input$scoringMethod, ' Scores for Dietary Components by ', varToComponent(input$scoringDemographic))) +
-                ggplot2::theme(legend.text = ggplot2::element_text(size = 10),
-                               plot.margin = ggplot2::margin(.25,0,0,0,'cm'),
-                               plot.title = ggplot2::element_text(size=15),
-                               plot.title.position = 'plot')
+              max_points <- as.vector(scoringStandards$max_points)
+              min_points <- rep(0, 13)
+              final_radar1_data <- as.data.frame(scoresTable[-c(1)]) %>% rbind(max_points, min_points, .)
 
-              radarPlotsList = list(radar1)
-              print(radar1)
+              row_names <- c("Max", "Min", as.vector(unlist(scoresTable[,1])))
+              rownames(final_radar1_data) <- row_names
+              colnames(final_radar1_data) <- names(variableList_heiComponents[-c(1)])
+              demoVar <- rlang::sym(colnames(final_radar1_data)[1])
 
               ############################
               #### TEST SECOND RADAR
               ############################
               if(input$secondDataset != 'None'){
+
 
                 filtered_scoringData2 <- secondSelected_scoringDataset() %>%
                   dplyr::filter(SEX %in% input$scoringSex,
@@ -645,17 +923,10 @@ runShinyApp <- function(){
 
                 #for loop calculates score for each variable and adds it to the total score
                 for(variables in variableList_heiComponents[-c(1)]){
-                  if(input$scoringDisplay == "Radar Plot"){
-                    divForProportion = hei_standards_2020$max_points[hei_standards_2020$component == variables]
-                  }
-                  else{
-                    divForProportion = 1
-                  }
 
                   scoringDataByVariable <- filtered_scoringData2 %>%
                     dplyr::select(dplyr::contains(variables), dplyr::contains("KCAL"), WTDR2D, scoringDemographicVariable) %>%
                     scoringFunction(., variables, scoringDemographicVariable, scoringStandards) %>%
-                    dplyr::mutate(score = score / divForProportion) %>%
                     tidyr::drop_na()
 
                   #add component score to total score
@@ -669,18 +940,63 @@ runShinyApp <- function(){
                 #### TEST CHUNK FOR LOOP END
                 ############################
 
+                ### SET ORDER OF TABLE ROWS BY DEMOGRAPHIC VARIABLES ###
+                if(scoringDemographicVariable == "ageBracket"){
+                  scoresTable$ageBracket <- factor(scoresTable$ageBracket, levels = c("Toddler (12 - 23 mo.)", "[2,10)", "[10,20)", "[20,30)", "[30,40)", "[40,50)", "[50,60)", "[60,70)", "[70,80)", "80+" ))
+                  scoresTable <- scoresTable %>% dplyr::arrange(ageBracket)
+                }
+
+                else if(scoringDemographicVariable == "FAMINC"){
+                  scoresTable$FAMINC <- factor(scoresTable$FAMINC, levels = c("[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)", "75000+" ,"[75000, 100000)", ">100000", "<20000", ">20000","Refused","Don't know", "NA"))
+                  scoresTable <- scoresTable %>% dplyr::arrange(FAMINC)
+                }
+
+                else if(scoringDemographicVariable == "SEX"){
+                  scoresTable <- scoresTable %>% dplyr::arrange(SEX)
+                }
+
+                else{
+                  scoresTable <- scoresTable %>% dplyr::arrange(RACE_ETH)
+                }
+                ### END OF SET ORDER OF TABLE ROWS BY DEMOGRAPHIC VARIABLES ###
+
                 colnames(scoresTable)[-c(1)] <- names(variableList_heiComponents[-c(1)]) #column names in proper display names from list
+                max_points <- as.vector(scoringStandards$max_points)
+                min_points <- rep(0, 13)
+                final_radar2_data <- as.data.frame(scoresTable[-c(1)]) %>% rbind(max_points, min_points, .)
+                row_names <- c("Max", "Min", as.vector(unlist(scoresTable[,1])))
+                rownames(final_radar2_data) <- row_names
+                colnames(final_radar2_data) <- names(variableList_heiComponents[-c(1)])
+                demoVar <- rlang::sym(colnames(final_radar2_data)[1])
 
-                radar2 <- ggradar::ggradar(scoresTable, group.colours=radarColors, axis.label.size = 3, grid.label.size = 5) + ggplot2::guides(fill = ggplot2::guide_colorbar()) +
-                  ggplot2::theme(legend.text = ggplot2::element_text(size = 10),
-                                 plot.margin = ggplot2::margin(.25,0,0,0,'cm'),
-                                 plot.title = ggplot2::element_text(size=15),
-                                 plot.title.position = 'plot')
+                graphics::layout(matrix(1:2, ncol = 1))
+                graphics::par(mar = c(5,5, 3, 3))
 
-                radar2
-                radarPlotsList = list(radar1, radar2)
-                ggpubr::ggarrange(plotlist = radarPlotsList, nrow = 1)
+                # plot radar 1
+                fmsb::radarchartcirc(final_radar1_data, vlcex = .7, plwd = 3, plty = 1, pcol = radarColors, axistype = 2, axislabcol = "red", palcex = .7, cglcol = "gray", cglty = 3)
+                graphics::legend(
+                  x = "left", legend = rownames(final_radar1_data[-c(1,2),]), horiz = F,
+                  bty = "n", pch = 20 , col = radarColors,
+                  text.col = "black", cex = 1, pt.cex = 1.5
+                )
 
+                # plot radar 2
+
+                fmsb::radarchartcirc(final_radar2_data, vlcex = .7, plwd = 3, plty = 1, pcol = radarColors, axistype = 2, axislabcol = "red", palcex = .7, cglcol = "gray", cglty = 3)
+                graphics::legend(
+                  x = "left", legend = rownames(final_radar2_data[-c(1,2),]), horiz = F,
+                  bty = "n", pch = 20 , col = radarColors,
+                  text.col = "black", cex = 1, pt.cex = 1.5
+                )
+
+              }
+              else{
+                fmsb::radarchartcirc(final_radar1_data, vlcex = .7, plwd = 3, plty = 1, pcol = radarColors, axistype = 2, axislabcol = "red", palcex = .7, cglcol = "gray", cglty = 3)
+                graphics::legend(
+                  x = "left", legend = rownames(final_radar1_data[-c(1,2),]), horiz = F,
+                  bty = "n", pch = 20 , col = radarColors,
+                  text.col = "black", cex = 1, pt.cex = 1.5
+                )
               }
               ############################
               #### TEST CHUNK SECOND RADAR END
@@ -697,10 +1013,11 @@ runShinyApp <- function(){
               plot1_mean <- ggplot2::ggplot(scoresTable, ggplot2::aes(x = !!scoringDemographicVariable, y = score, fill=!!scoringDemographicVariable)) +
                 ggplot2::geom_bar(stat = "identity") +
                 ggplot2::ylim(0, ymax) +
-                ggplot2::labs(x = varToComponent(input$scoringDemographic), y = "score") +
+                ggplot2::labs(x = varToComponent(input$scoringDemographic), y = "Score") +
                 ggplot2::theme_classic() +
                 ggplot2::theme(axis.text=ggplot2::element_text(color='black', size=11),
-                               axis.title = ggplot2::element_text(face="bold", size=15)) +
+                               axis.title = ggplot2::element_text(face="bold", size=15),
+                               axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1)) +
                 ggplot2::theme_classic() +
                 ggplot2::scale_fill_manual(values=radarColors) +
                 ggplot2::guides(fill=ggplot2::guide_legend(title=varToComponent(input$scoringDemographic))) +
@@ -764,7 +1081,8 @@ runShinyApp <- function(){
                   ggplot2::labs(x = varToComponent(input$scoringDemographic), y = "Score") +
                   ggplot2::theme_classic() +
                   ggplot2::theme(axis.text=ggplot2::element_text(color='black', size=11),
-                                 axis.title = ggplot2::element_text(face="bold", size=15)) +
+                                 axis.title = ggplot2::element_text(face="bold", size=15),
+                                 axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1)) +
                   ggplot2::theme_classic() +
                   ggplot2::scale_fill_manual(values=radarColors) +
                   ggplot2::guides(fill=ggplot2::guide_legend(title=varToComponent(input$scoringDemographic)))
@@ -808,7 +1126,8 @@ runShinyApp <- function(){
               ggplot2::labs(x = varToComponent(input$scoringDemographic), y = "Score") +
               ggplot2::theme_classic() +
               ggplot2::theme(axis.text=ggplot2::element_text(color='black', size=11),
-                             axis.title = ggplot2::element_text(face="bold", size=15)) +
+                             axis.title = ggplot2::element_text(face="bold", size=15),
+                             axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1)) +
               ggplot2::scale_fill_manual(values=radarColors) +
               ggplot2::guides(fill=ggplot2::guide_legend(title=varToComponent(input$scoringDemographic)))
 
@@ -833,7 +1152,8 @@ runShinyApp <- function(){
                 ggplot2::labs(x = varToComponent(input$scoringDemographic), y = "Score") +
                 ggplot2::theme_classic() +
                 ggplot2::theme(axis.text=ggplot2::element_text(color='black', size=11),
-                               axis.title = ggplot2::element_text(face="bold", size=15)) +
+                               axis.title = ggplot2::element_text(face="bold", size=15),
+                               axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1)) +
                 ggplot2::scale_fill_manual(values=radarColors) +
                 ggplot2::guides(fill=ggplot2::guide_legend(title=varToComponent(input$scoringDemographic)))
 
@@ -846,24 +1166,12 @@ runShinyApp <- function(){
             }
           }
         }
-      })
+      }, height = 600, width = 700)
 
       output$scoringNum_observations <- shiny::renderText({
 
         if(input$scoringVariable == "Total Score"){
           filtered_scoringData <- selected_scoringDataset() %>%
-          dplyr::filter(SEX %in% input$scoringSex,
-                        RACE_ETH %in% input$scoringRace,
-                        ageBracket %in% input$scoringAge,
-                        FAMINC %in% input$scoringIncome) %>%
-          dplyr::select(SEQN, WTDR2D, dplyr::contains(unlist(variableList_heiComponents)), DR1TKCAL, DR2TKCAL) %>%
-          tidyr::drop_na()
-
-        subject_num <- nrow(filtered_scoringData)
-
-        if(input$secondDataset != 'None'){
-
-          filtered_scoringData2 <- secondSelected_scoringDataset() %>%
             dplyr::filter(SEX %in% input$scoringSex,
                           RACE_ETH %in% input$scoringRace,
                           ageBracket %in% input$scoringAge,
@@ -871,25 +1179,24 @@ runShinyApp <- function(){
             dplyr::select(SEQN, WTDR2D, dplyr::contains(unlist(variableList_heiComponents)), DR1TKCAL, DR2TKCAL) %>%
             tidyr::drop_na()
 
-          subject_num <- subject_num + nrow(filtered_scoringData2)
-        }}
+          subject_num <- nrow(filtered_scoringData)
+
+          if(input$secondDataset != 'None'){
+
+            filtered_scoringData2 <- secondSelected_scoringDataset() %>%
+              dplyr::filter(SEX %in% input$scoringSex,
+                            RACE_ETH %in% input$scoringRace,
+                            ageBracket %in% input$scoringAge,
+                            FAMINC %in% input$scoringIncome) %>%
+              dplyr::select(SEQN, WTDR2D, dplyr::contains(unlist(variableList_heiComponents)), DR1TKCAL, DR2TKCAL) %>%
+              tidyr::drop_na()
+
+            subject_num <- subject_num + nrow(filtered_scoringData2)
+          }}
 
         # For individual components
         else{
           filtered_scoringData <- selected_scoringDataset() %>%
-          dplyr::filter(SEX %in% input$scoringSex,
-                        RACE_ETH %in% input$scoringRace,
-                        ageBracket %in% input$scoringAge,
-                        FAMINC %in% input$scoringIncome) %>%
-            dplyr::select(SEQN, WTDR2D, dplyr::contains(input$scoringVariable), DR1TKCAL, DR2TKCAL) %>%
-            tidyr::drop_na()
-
-
-        subject_num <- nrow(filtered_scoringData)
-
-        if(input$secondDataset != 'None'){
-
-          filtered_scoringData2 <- secondSelected_scoringDataset() %>%
             dplyr::filter(SEX %in% input$scoringSex,
                           RACE_ETH %in% input$scoringRace,
                           ageBracket %in% input$scoringAge,
@@ -897,11 +1204,24 @@ runShinyApp <- function(){
             dplyr::select(SEQN, WTDR2D, dplyr::contains(input$scoringVariable), DR1TKCAL, DR2TKCAL) %>%
             tidyr::drop_na()
 
-          subject_num <- subject_num + nrow(filtered_scoringData2)
-        }}
+
+          subject_num <- nrow(filtered_scoringData)
+
+          if(input$secondDataset != 'None'){
+
+            filtered_scoringData2 <- secondSelected_scoringDataset() %>%
+              dplyr::filter(SEX %in% input$scoringSex,
+                            RACE_ETH %in% input$scoringRace,
+                            ageBracket %in% input$scoringAge,
+                            FAMINC %in% input$scoringIncome) %>%
+              dplyr::select(SEQN, WTDR2D, dplyr::contains(input$scoringVariable), DR1TKCAL, DR2TKCAL) %>%
+              tidyr::drop_na()
+
+            subject_num <- subject_num + nrow(filtered_scoringData2)
+          }}
 
         paste("Number of Subjects Selected:", subject_num)
-        })
+      })
 
       ###Demographics Plots###
       output$demoPlot <- shiny::renderPlot({

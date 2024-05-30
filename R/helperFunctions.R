@@ -8,7 +8,7 @@ varToComponent <- function(target_name){
                                       'Whole Grains' = 'G_WHOLE',
                                       'Total Dairy' = 'D_TOTAL',
                                       'Total Protein' = 'PFALLPROTLEG',
-                                      'Seafood and Plant Proteins' = 'PFSEAPLANTLEG',
+                                      'Seafood/Plant Proteins' = 'PFSEAPLANTLEG',
                                       'Fatty Acids' = 'TFACIDS',
                                       'Refined Grains' = 'G_REFINED',
                                       'Sodium' = 'TSODI',
