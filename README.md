@@ -50,8 +50,8 @@ This is a basic example which shows you how to solve a common problem:
 
 ``` r
 library(heiscore)
-library(tidyr)
 suppressPackageStartupMessages(library(dplyr))
+library(tidyr)
 library(stringr)
 library(shiny)
 library(shinythemes)
@@ -61,6 +61,9 @@ library(ggpubr)
 library(grDevices)
 library(RColorBrewer)
 library(rlang)
+library(stats)
+library(graphics)
+library(fmsb)
 
 # Retrieve NHANES dietary data converted to Food Patterns components and 
 # demographic data for 2017 and 2018 
