@@ -5,67 +5,59 @@
 \title{Calculate Healthy Eating Index (HEI) scores from NHANES data}
 \usage{
 score(
-  scoringMethod,
+  method,
   years,
-  heiComponent,
-  demographicGroup = NULL,
+  component,
+  demo = NULL,
   sex = c("Female", "Male"),
-  raceEthnicity = c("Asian", "White", "Black", "Other", "Mexican American",
-    "Other Hispanic"),
+  race = c("Asian", "White", "Black", "Other", "Mexican American", "Other Hispanic"),
   age = c(2, 100),
-  familyIncome = c("[0, 5000)", "[5000, 10000)", "[10000, 15000)", "[15000, 20000)",
+  income = c("[0, 5000)", "[5000, 10000)", "[10000, 15000)", "[15000, 20000)",
     "[20000, 25000)", "[25000, 35000)", "[35000, 45000)", "[45000, 55000)",
     "[55000, 65000)", "[65000, 75000)", "[75000, 100000)", "75000+", ">100000", ">20000",
     "<20000", "Refused", "Don't know", "NA")
 )
 }
 \arguments{
-\item{scoringMethod}{The HEI scoring method to use. Choose from "Simple," "Pop Ratio," or "Mean Ratio."}
+\item{method}{A single character string with the HEI scoring method to use. Choose from "simple", "pop ratio", or "mean ratio".}
 
-\item{years}{The NHANES cycle to select, choose from: "0506," "0708," "0910," "1112," "1314," "1516," or "1718. etc.}
+\item{years}{A single character string representing the NHANES cycle to select, choose from: "0506", "0708", "0910", "1112", "1314", "1516", or "1718".}
 
-\item{heiComponent}{The HEI component to score and plot. Options include "Total Score", "Total Fruit", "Whole Fruits", "Total Vegetables", "Greens and Beans", "Whole Grains", "Total Dairy", "Total Protein", "Seafood and Plant Proteins", "Fatty Acids", "Refined Grains", "Sodium", "Added Sugars", and "Saturated Fat".}
+\item{component}{A single character string with the HEI component to score and plot. Options include "total score", "total fruit", "whole fruits", "total vegetables", "greens and beans", "whole grains", "total dairy", "total protein", "seafood and plant proteins", "fatty acids", "refined grains", "sodium", "added sugars", and "saturated fat".}
 
-\item{demographicGroup}{The demographic grouping by which the data should be scored. If scoringMethod = "Simple", choose NULL as the demographicGroup. Otherwise, choose from "Sex", "Race/Ethnicity", "Age", or "Family Income".}
+\item{demo}{A single character string with the demographic grouping by which the data should be scored or NULL. If method = "simple", choose NULL as the demo. Otherwise, choose from "sex", "race", "age", or "income".}
 
-\item{sex}{a vector of the sexes in desired subpopulation. Provide a vector with "Female", "Male", or both.}
+\item{sex}{A vector of the sexes in the desired subpopulation. Provide a vector with the character strings "Female", "Male", or both.}
 
-\item{raceEthnicity}{a vector of races/ethnicities in desired subpopulation. Provide a vector including any combination of the following: "Asian", "White", "Black", "Other", "Mexican American", "Other Hispanic",}
+\item{race}{A vector of races/ethnicities in the desired subpopulation. Provide a vector including any combination of the following character strings: "Asian", "White", "Black", "Other", "Mexican American", and "Other Hispanic".}
 
-\item{age}{a vector in the form c(min, max) with two numbers specifying the desired age range to analyze. Both numbers should either be ones (to represent the toddler age group including ages 12-23 months) or 2 and above.}
+\item{age}{A vector in the form c(min, max) with two integers specifying the desired age range to analyze. Both integers should either be ones (to represent the toddler age group including ages 12-23 months) or 2 and above.}
 
-\item{familyIncome}{a vector of family income brackets in the desired subpopulation. Provide a vector including any combination of the following: "[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)","[75000, 100000)", "75000+",">100000", ">20000","<20000","Refused","Don't know", "NA"}
+\item{income}{A vector of family income brackets in the desired subpopulation. Provide a vector including any combination of the following character strings: "[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)","[75000, 100000)", "75000+",">100000", ">20000","<20000","Refused","Don't know", "NA".}
 }
 \value{
-A tibble with HEI scores for the selected component for each individual (when scoringMethod = "Simple") or by demographic grouping specified in demographicGroup.
+A tibble with HEI scores for the selected component for each individual (when method = "simple") or by demographic grouping specified in demo.
 }
 \description{
 This function calculates HEI component or total scores using the inputted scoring method. The user can subset the data to only include subjects in specific demographic groups
 }
 \examples{
-library(magrittr)
-library(dplyr)
-library(tibble)
-library(rlang)
-library(stats)
-library(tidyr)
-
 # Calculate the Total Fruit component score from the 2017-18 NHANES data
-# using the 'Simple' method.
-score(scoringMethod = "Simple",
+# using the 'simple' method.
+score(method = "simple",
                     years = "1718",
-                    heiComponent = "Total Fruit",
-                    demographicGroup = NULL)
+                    component = "Total Fruit",
+                    demo = NULL)
 
 # Calculate the total HEI score by sex using the population ratio method for
 # White and Black individuals between ages 5 and 10 with a family income
 # between 5000abd 15000 in the 2011-12 NHANES cycle.
-score(scoringMethod = "Pop Ratio",
+score(method = "pop ratio",
                     years = "1112",
-                    heiComponent = "Total Score",
-                    demographicGroup = "Sex",
-                    raceEthnicity = c("White", "Black"),
+                    component = "total score",
+                    demo = "sex",
+                    race = c("White", "Black"),
                     age = c(5,10),
-                    familyIncome = c("[5000, 10000)", "[10000, 15000)"))
+                    income = c("[5000, 10000)", "[10000, 15000)"))
 
 }

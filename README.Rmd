@@ -44,46 +44,32 @@ This is a basic example which shows you how to solve a common problem:
 
 ```{r example, fig.width=11, fig.height=7}
 library(heiscore)
-suppressPackageStartupMessages(library(dplyr))
-library(tidyr)
-library(stringr)
-library(shiny)
-library(shinythemes)
-library(ggplot2)
-library(tibble)
-library(ggpubr)
-library(grDevices)
-library(RColorBrewer)
-library(rlang)
-library(stats)
-library(graphics)
-library(fmsb)
 
 # Retrieve NHANES dietary data converted to Food Patterns components and 
 # demographic data for 2017 and 2018 
-selectDataset(year = '1718')
+selectDataset(years = '1718')
 
 # Produce 2011-12 HEI scores for the Total Fruit component using the Mean Ratio 
 # scoring method. Only include white and black women aged 50 to 100 with a 
 # family income of $75,000 or more. Display the results by race/ethnicity. 
-score(scoringMethod = "Mean Ratio",
+score(method = "Mean Ratio",
       years = "1112",
-      heiComponent = "Total Fruit",
-      demographicGroup = "Race/Ethnicity",
+      component = "Total Fruit",
+      demo = "Race",
       sex = ("Female"),
-      raceEthnicity = c("White", "Black"),
+      race = c("White", "Black"),
       age = c(50, 100),
-      familyIncome = c("[75000, 100000)", "75000+", ">100000"))
+      income = c("[75000, 100000)", "75000+", ">100000"))
 
 # Create a radar plot that displays the breakdown of HEI score components by 
 # family income level. Use 2017-18 NHANES data and the Population Ratio Method 
 # for scoring.
 plotScore(graph = "Radar", 
-          scoringMethod = "Pop Ratio", 
+          method = "Pop Ratio", 
           years = "1718", 
-          heiComponent = "Total Score", 
-          demographicGroup = "Family Income", 
-          familyIncome = c("[0, 5000)", "[15000, 20000)", "[35000, 45000)", "[45000, 55000)", 
+          component = "Total Score", 
+          demo = "income", 
+          income = c("[0, 5000)", "[15000, 20000)", "[35000, 45000)", "[45000, 55000)", 
                            "[55000, 65000)", "[65000, 75000)", "[75000, 100000)", ">100000"))
 
 ```

@@ -25,6 +25,9 @@ ratioToScore <- function(componentName, componentRatio, ageMin){
     if(componentRatio >= maxAmount){
       return(maxPoints)
     }
+    else if(componentRatio <= zeroScore){
+      return(0)
+    }
     else{
       return((componentRatio - zeroScore)/(maxAmount - zeroScore) * maxPoints)
     }
@@ -46,16 +49,17 @@ ratioToScore <- function(componentName, componentRatio, ageMin){
 
 ### Simple Scoring Function ###
 simpleScore <- function(rawData, scoringVariable, ageMin){
-
   simpleScoringData <- rawData %>%
     dplyr::select(SEQN, WTDR2D, dplyr::contains(scoringVariable), DR1TKCAL, DR2TKCAL, SEX, AGE, RACE_ETH, FAMINC) %>%
-    dplyr::mutate(recall = rowSums(dplyr::select(.,dplyr::contains(scoringVariable))),
-           KCAL = rowSums(dplyr::across(c(DR1TKCAL, DR2TKCAL))),
+    dplyr::mutate(recall = rowSums(dplyr::select(.,dplyr::contains(scoringVariable)), na.rm = TRUE),
+           KCAL = rowSums(dplyr::across(c(DR1TKCAL, DR2TKCAL)), na.rm = TRUE),
            ratio = dplyr::case_when(scoringVariable == "TSODI" ~ recall / KCAL,
                              scoringVariable == "TSFAT" ~ recall * 9 / KCAL * 100,
                              scoringVariable == "ADD_SUGARS" ~ recall * 16  / KCAL * 100,
                              scoringVariable == "TFACIDS" ~ recall,
-                             TRUE ~ recall / KCAL * 1000)) %>%
+                             TRUE ~ recall / KCAL * 1000))
+
+  simpleScoringData <- simpleScoringData %>%
     dplyr::rowwise() %>%
     dplyr::mutate(score = ratioToScore(scoringVariable, ratio, ageMin)) %>%
     dplyr::select(SEQN, WTDR2D, SEX, AGE, RACE_ETH, FAMINC, score)
@@ -66,8 +70,8 @@ simpleScore <- function(rawData, scoringVariable, ageMin){
 meanRatioScore <- function(rawData, scoringVariable, scoringDemographicVariable, ageMin){
 
   meanRatioData <- rawData %>%
-    dplyr::mutate(recall = rowSums(dplyr::select(.,dplyr::contains(scoringVariable))),
-           KCAL = rowSums(dplyr::across(c(DR1TKCAL, DR2TKCAL))),
+    dplyr::mutate(recall = rowSums(dplyr::select(.,dplyr::contains(scoringVariable)), na.rm = TRUE),
+           KCAL = rowSums(dplyr::across(c(DR1TKCAL, DR2TKCAL)), na.rm = TRUE),
            ratio = dplyr::case_when(scoringVariable == "TSODI" ~ recall / KCAL,
                              scoringVariable == "TSFAT" ~ recall * 9 / KCAL * 100,
                              scoringVariable == "ADD_SUGARS" ~ recall * 16  / KCAL * 100,

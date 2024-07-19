@@ -1,6 +1,6 @@
 Package: heiscore
 Title: Score and Plot the Healthy Eating Index from NHANES Data
-Version: 0.0.1
+Version: 0.1.2
 Authors@R: c(
     person("Vijetha", "Ramdas", , "vramdas06@gmail.com", role = c("aut", "cre")),
     person("Berkeley", "Ho", , "berknho@utexas.edu", role = "aut"),
@@ -14,6 +14,8 @@ Description: Calculate and visualize Healthy Eating Index (HEI) scores
     Effortlessly analyze HEI scores across different demographic groups
     and years.
 License: MIT + file LICENSE
+URL: https://github.com/abhrastat/heiscore
+BugReports: https://github.com/abhrastat/heiscore/issues
 Depends: 
     R (>= 2.10)
 Imports: 
@@ -24,15 +26,16 @@ Imports:
     graphics,
     grDevices,
     magrittr,
-    RColorBrewer,
     rlang,
     shiny,
     shinythemes,
+    shinyWidgets,
     stats,
     stringr,
     tibble,
     tidyr,
-    utils
+    utils,
+    viridis
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.1

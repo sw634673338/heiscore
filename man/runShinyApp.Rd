@@ -85,19 +85,6 @@ Below Plot Options
 }
 
 \examples{
-library(tidyr)
-library(dplyr)
-library(stringr)
-library(shiny)
-library(shinythemes)
-library(ggplot2)
-library(tibble)
-library(ggpubr)
-library(grDevices)
-library(RColorBrewer)
-library(rlang)
-library(stats)
-library(graphics)
 
 runShinyApp()
 

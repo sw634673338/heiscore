@@ -1,7 +1,7 @@
 #' @import magrittr
 
 cleanDataset <- function(dataset){
-  # keep only subjects that participated and have a valide age (> 1 yr)
+  # keep only subjects that participated and have a valid age (> 1 yr)
   cleanData <- dataset[dataset$WTDR2D != 0 & dataset$AGE >= 1,] %>%
     tidyr::drop_na(WTDR2D) %>%
     dplyr::mutate(
@@ -21,7 +21,7 @@ cleanDataset <- function(dataset){
     )
 
   # convert empty strings to NA values
-  cleanData$FAMINC[cleanData$FAMINC==''] <- "NA"
+  cleanData$FAMINC[is.na(cleanData$FAMINC)] <- "NA"
 
   return(cleanData)
 }

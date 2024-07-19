@@ -5,19 +5,6 @@
 #' @return No return value, launches interactive Shiny app
 #'
 #' @examples
-#' library(tidyr)
-#' library(dplyr)
-#' library(stringr)
-#' library(shiny)
-#' library(shinythemes)
-#' library(ggplot2)
-#' library(tibble)
-#' library(ggpubr)
-#' library(grDevices)
-#' library(RColorBrewer)
-#' library(rlang)
-#' library(stats)
-#' library(graphics)
 #'
 #' runShinyApp()
 #'
@@ -132,7 +119,7 @@ runShinyApp <- function(){
 
     #####UI#####
     ui <- shiny::fluidPage(
-      theme = shinythemes::shinytheme("cosmo"),
+      theme = shinythemes::shinytheme("yeti"),
       shiny::titlePanel("Visualizing the Healthy Eating Index"),
       shiny::tabsetPanel(
 
@@ -170,13 +157,13 @@ runShinyApp <- function(){
                         #useShinyjs(),
                         shiny::sidebarLayout(
                           shiny::sidebarPanel(
-                            shiny::selectInput("demoDataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected = "2017-18"),
-                            shiny::selectInput('selectDemo', 'Choose a Demographic',
+                            shinyWidgets::pickerInput("demoDataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected = "2017-18"),
+                            shinyWidgets::pickerInput('selectDemo', 'Choose a Demographic',
                                                choices=c("Sex", "Race", "Age", "Income")),
-                            shiny::checkboxGroupInput("demoSex", "Select Sex", choices = NULL),
-                            shiny::checkboxGroupInput("demoRace", "Select Race/Ethnicity", choices = NULL),
-                            shiny::checkboxGroupInput("demoAge", "Select Age", choices = NULL),
-                            shiny::checkboxGroupInput("demoIncome", "Select Income", choices = NULL),
+                            shinyWidgets::pickerInput("demoSex", "Select Sex", choices = NULL, multiple = TRUE, options = shinyWidgets::pickerOptions(actionsBox = TRUE)),
+                            shinyWidgets::pickerInput("demoRace", "Select Race/Ethnicity", choices = NULL, multiple = TRUE, options = shinyWidgets::pickerOptions(actionsBox = TRUE)),
+                            shinyWidgets::pickerInput("demoAge", "Select Age", choices = NULL, multiple = TRUE, options = shinyWidgets::pickerOptions(actionsBox = TRUE)),
+                            shinyWidgets::pickerInput("demoIncome", "Select Income", choices = NULL, multiple = TRUE, options = shinyWidgets::pickerOptions(actionsBox = TRUE)),
                           ),
                           shiny::mainPanel(shiny::plotOutput('demoPlot'),
                                            shiny::textOutput('demoNum_observations'))
@@ -187,17 +174,17 @@ runShinyApp <- function(){
         shiny::tabPanel('Recalls',
                         shiny::sidebarLayout(
                           shiny::sidebarPanel(
-                            shiny::selectInput("dataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected = "2017-18"),
+                            shinyWidgets::pickerInput("dataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected = "2017-18"),
                             shiny::radioButtons("componentType", "Select Component Type",
                                                 choices = list("Dietary Constituents" = 1,
                                                                "Dietary Components" = 2),
                                                 selected = 1),
-                            shiny::selectInput("variable", "Select Variable",
+                            shinyWidgets::pickerInput("variable", "Select Variable",
                                                choices = variableList_heiComponents),
-                            shiny::checkboxGroupInput("sex", "Select Sex", choices = NULL),
-                            shiny::checkboxGroupInput("race", "Select Race", choices = NULL),
-                            shiny::checkboxGroupInput("age", "Select Age Bracket", choices = NULL),
-                            shiny::checkboxGroupInput("income", "Select Income Bracket", choices = NULL)
+                            shinyWidgets::pickerInput("sex", "Select Sex", choices = NULL, multiple = TRUE, options = shinyWidgets::pickerOptions(actionsBox = TRUE)),
+                            shinyWidgets::pickerInput("race", "Select Race", choices = NULL, multiple = TRUE, options = shinyWidgets::pickerOptions(actionsBox = TRUE)),
+                            shinyWidgets::pickerInput("age", "Select Age Bracket", choices = NULL, multiple = TRUE, options = shinyWidgets::pickerOptions(actionsBox = TRUE)),
+                            shinyWidgets::pickerInput("income", "Select Income Bracket", choices = NULL, multiple = TRUE, options = shinyWidgets::pickerOptions(actionsBox = TRUE))
                           ),
                           shiny::mainPanel(shiny::plotOutput("myPlot"),
                                            shiny::br(),
@@ -205,7 +192,7 @@ runShinyApp <- function(){
                                            shiny::br(),
                                            #shiny::textOutput("num_observations"),
                                            shiny::br(),
-                                           shiny::selectInput("recallPlotType", "Select Plot Type", choices = c("Histogram", "Radar"), selected = "Histogram"),
+                                           shinyWidgets::pickerInput("recallPlotType", "Select Plot Type", choices = c("Histogram", "Radar"), selected = "Histogram"),
                                            shiny::p(shiny::strong("Options")),
                                            shiny::checkboxInput("adjusted_checkbox", 'Adjusted per 1000 Calories', value=FALSE),
                                            shiny::checkboxInput("average_checkbox", "Plot Average", value = FALSE),
@@ -213,7 +200,7 @@ runShinyApp <- function(){
                                                                choices = list("Keep X-Axis Constant for Recall Component (Regardless of Year or Demographic Group)" = 1,
                                                                               "Make X-Axis Proportional to Maximum" = 2,
                                                                               "Raw Values" = 3),
-                                                               selected = 1), shiny::selectInput('recallDemographic', 'Select Radar Plot Demographic',
+                                                               selected = 1), shinyWidgets::pickerInput('recallDemographic', 'Select Radar Plot Demographic',
                                                                                                  choices= list("Sex" = "SEX",
                                                                                                                "Race" = "RACE_ETH",
                                                                                                                "Age" = "ageBracket",
@@ -226,21 +213,21 @@ runShinyApp <- function(){
         shiny::tabPanel('Scoring',
                         shiny::sidebarLayout(
                           shiny::sidebarPanel(
-                            shiny::selectInput('scoringMethod', 'Choose a Scoring Method',
+                            shinyWidgets::pickerInput('scoringMethod', 'Choose a Scoring Method',
                                                choices=c('Simple', 'Mean Ratio', 'Population Ratio')),
-                            shiny::selectInput("scoringDataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected = "2017-18"),
-                            shiny::selectInput('secondDataset', 'Compare with a Second Dataset', choices=c('None', "2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected='None'),
-                            shiny::selectInput('scoringVariable', 'Select Variable', choices = c("Total Score", variableList_heiComponents[-c(1)])),
-                            shiny::selectInput('scoringAgeChoice', 'Select Age Group', choices=c('Population 2 Years and Older', 'Toddlers (12 through 23 Months)')),
-                            shiny::selectInput('scoringDemographic', 'Choose a Demographic',
+                            shinyWidgets::pickerInput("scoringDataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected = "2017-18"),
+                            shinyWidgets::pickerInput('secondDataset', 'Compare with a Second Dataset', choices=c('None', "2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected='None'),
+                            shinyWidgets::pickerInput('scoringVariable', 'Select Variable', choices = c("Total Score", variableList_heiComponents[-c(1)])),
+                            shinyWidgets::pickerInput('scoringAgeChoice', 'Select Age Group', choices=c('Population 2 Years and Older', 'Toddlers (12 through 23 Months)')),
+                            shinyWidgets::pickerInput('scoringDemographic', 'Choose a Demographic',
                                                choices= list("Sex" = "SEX",
                                                              "Race" = "RACE_ETH",
                                                              "Age" = "ageBracket",
                                                              "Income" = "FAMINC")),
-                            shiny::checkboxGroupInput('scoringSex', 'Select Sex', choices=NULL),
-                            shiny::checkboxGroupInput('scoringRace', 'Select Race/Ethnicity', choices=NULL),
-                            shiny::checkboxGroupInput('scoringAge', 'Select Age', choices=NULL),
-                            shiny::checkboxGroupInput('scoringIncome', 'Select Income', choices=NULL)
+                            shinyWidgets::pickerInput('scoringSex', 'Select Sex', choices=NULL, multiple = TRUE, options = shinyWidgets::pickerOptions(actionsBox = TRUE)),
+                            shinyWidgets::pickerInput('scoringRace', 'Select Race/Ethnicity', choices=NULL, multiple = TRUE, options = shinyWidgets::pickerOptions(actionsBox = TRUE)),
+                            shinyWidgets::pickerInput('scoringAge', 'Select Age', choices=NULL, multiple = TRUE, options = shinyWidgets::pickerOptions(actionsBox = TRUE)),
+                            shinyWidgets::pickerInput('scoringIncome', 'Select Income', choices=NULL, multiple = TRUE, options = shinyWidgets::pickerOptions(actionsBox = TRUE))
                           ),
                           shiny::mainPanel(shiny::plotOutput('scoringPlot'),
                                            shiny::br(),
@@ -254,7 +241,7 @@ runShinyApp <- function(){
                                            shiny::br(),
                                            shiny::br(),
                                            shiny::textOutput('scoringNum_observations'),
-                                           shiny::selectInput("scoringDisplay", "Select a scoring display option", choices = NULL))
+                                           shinyWidgets::pickerInput("scoringDisplay", "Select a scoring display option", choices = NULL))
                         )
         )
       )
@@ -335,10 +322,10 @@ runShinyApp <- function(){
           }
 
           if(input$adjusted_checkbox){
-            shiny::updateSelectInput(session, "variable", choices = variableList[-(adjChoices)])
+            shinyWidgets::updatePickerInput(session, "variable", choices = variableList[-(adjChoices)])
           }
           else{
-            shiny::updateSelectInput(session, "variable", choices = variableList)
+            shinyWidgets::updatePickerInput(session, "variable", choices = variableList)
           }
         }
         else{
@@ -348,7 +335,7 @@ runShinyApp <- function(){
           else{
             variableList = list( "All Components")
           }
-          shiny::updateSelectInput(session, "variable", choices = variableList)
+          shinyWidgets::updatePickerInput(session, "variable", choices = variableList)
         }
       })
 
@@ -363,13 +350,13 @@ runShinyApp <- function(){
 
         #recall panel
         sex_choices <- unique(dataset$SEX)
-        shiny::updateCheckboxGroupInput(session, "sex", choices = sort(sex_choices), selected = sex_choices)
+        shinyWidgets::updatePickerInput(session, "sex", choices = sort(sex_choices), selected = sex_choices)
         race_choices <- unique(dataset$RACE_ETH)
-        shiny::updateCheckboxGroupInput(session, "race", choices = sort(race_choices), selected = race_choices)
+        shinyWidgets::updatePickerInput(session, "race", choices = sort(race_choices), selected = race_choices)
         age_choices <- unique(dataset$ageBracket)
-        shiny::updateCheckboxGroupInput(session, "age", choices = sort(age_choices), selected = age_choices)
+        shinyWidgets::updatePickerInput(session, "age", choices = sort(age_choices), selected = age_choices)
         inc_choices <- unique(dataset$FAMINC)
-        shiny::updateCheckboxGroupInput(session, "income", choices = sort(inc_choices), selected = inc_choices)
+        shinyWidgets::updatePickerInput(session, "income", choices = sort(inc_choices), selected = inc_choices)
       })
 
       # get correct demographic options based on the year selected for scoring
@@ -380,30 +367,30 @@ runShinyApp <- function(){
         #Get the unique observations of demographic variables and update their respective checkbox options
 
         sex_choices <- unique(dataset$SEX)
-        shiny::updateCheckboxGroupInput(session, "scoringSex", choices = sort(sex_choices), selected = sex_choices)
+        shinyWidgets::updatePickerInput(session, "scoringSex", choices = sort(sex_choices), selected = sex_choices)
         race_choices <- unique(dataset$RACE_ETH)
-        shiny::updateCheckboxGroupInput(session, "scoringRace", choices = sort(race_choices), selected = race_choices)
+        shinyWidgets::updatePickerInput(session, "scoringRace", choices = sort(race_choices), selected = race_choices)
         age_choices <- unique(dataset$ageBracket)
         if(input$scoringAgeChoice == 'Population 2 Years and Older'){
-          shiny::updateCheckboxGroupInput(session, "scoringAge", choices = sort(age_choices)[-c(1)], selected = age_choices)
+          shinyWidgets::updatePickerInput(session, "scoringAge", choices = sort(age_choices)[-c(1)], selected = age_choices)
         }
         else{
-          shiny::updateCheckboxGroupInput(session, "scoringAge", choices = sort(age_choices)[1], selected = age_choices)
+          shinyWidgets::updatePickerInput(session, "scoringAge", choices = sort(age_choices)[1], selected = age_choices)
         }
         inc_choices <- unique(dataset$FAMINC)
-        shiny::updateCheckboxGroupInput(session, "scoringIncome", choices = sort(inc_choices), selected = inc_choices)
+        shinyWidgets::updatePickerInput(session, "scoringIncome", choices = sort(inc_choices), selected = inc_choices)
       })
 
       # allow user to display mean/pop ratio with a radar plot when on total score variable
       shiny::observeEvent(list(input$scoringVariable, input$scoringMethod), {
         if(input$scoringVariable == "Total Score" & (input$scoringMethod == "Mean Ratio"| input$scoringMethod == "Population Ratio")){
-          shiny::updateSelectInput(session, "scoringDisplay", choices = c("Bar Plot", "Radar Plot"))
+          shinyWidgets::updatePickerInput(session, "scoringDisplay", choices = c("Bar Plot", "Radar Plot"))
         }
         else if(input$scoringMethod == "Mean Ratio"| input$scoringMethod == "Population Ratio"){
-          shiny::updateSelectInput(session, "scoringDisplay", choices = "Bar Plot")
+          shinyWidgets::updatePickerInput(session, "scoringDisplay", choices = "Bar Plot")
         }
         else{
-          shiny::updateSelectInput(session, "scoringDisplay", choices = "Histogram")
+          shinyWidgets::updatePickerInput(session, "scoringDisplay", choices = "Histogram")
 
         }
       })
@@ -420,10 +407,10 @@ runShinyApp <- function(){
         age_choices <- unique(dataset$ageBracket)
         inc_choices <- unique(dataset$FAMINC)
 
-        shiny::updateCheckboxGroupInput(session, "demoSex", choices = sort(sex_choices), selected = sex_choices)
-        shiny::updateCheckboxGroupInput(session, "demoRace", choices = sort(race_choices), selected = race_choices)
-        shiny::updateCheckboxGroupInput(session, "demoAge", choices = sort(age_choices), selected = age_choices)
-        shiny::updateCheckboxGroupInput(session, "demoIncome", choices = sort(inc_choices), selected = inc_choices)
+        shinyWidgets::updatePickerInput(session, "demoSex", choices = sort(sex_choices), selected = sex_choices)
+        shinyWidgets::updatePickerInput(session, "demoRace", choices = sort(race_choices), selected = race_choices)
+        shinyWidgets::updatePickerInput(session, "demoAge", choices = sort(age_choices), selected = age_choices)
+        shinyWidgets::updatePickerInput(session, "demoIncome", choices = sort(inc_choices), selected = inc_choices)
       })
 
       ###Create the plot from subset selected###
@@ -437,6 +424,8 @@ runShinyApp <- function(){
                         RACE_ETH %in% input$race,
                         ageBracket %in% input$age,
                         FAMINC %in% input$income)
+        shiny::validate(
+          shiny::need(nrow(filtered_data) > 0, "No individuals selected."))
 
         if(input$recallPlotType == "Histogram"){
           filtered_data <- filtered_data %>%
@@ -636,6 +625,7 @@ runShinyApp <- function(){
 
           # set up recall table in format for fmsb radar plots
           max_points <- maxPointVals
+          min_points <- rep(0, length(colnames(recallTable))-1)
 
           final_radar_data <- as.data.frame(recallTable[-c(1)]) %>%
             rbind(max_points, min_points, .)
@@ -645,17 +635,15 @@ runShinyApp <- function(){
 
           # set colors for radar plots
           if(input$recallDemographic=='FAMINC'){
-            radarColors = grDevices::colorRampPalette(c('cadetblue3', 'blue4'))
-            radarColors2 = grDevices::colorRampPalette(c('coral', 'coral4'))
+            radarColors = grDevices::colorRampPalette(c("#FFBE6A","#40B0A6"))
+            radarColors2 = grDevices::colorRampPalette(c("#0072B2","#000000"))
             radarColors = c(radarColors(12), radarColors2(5))
           } else if(input$recallDemographic=='RACE_ETH' | input$recallDemographic=='SEX'){
-            if(nrow(recallDataByVariable) >= 3){radarColors = RColorBrewer::brewer.pal(n=nrow(recallDataByVariable), name='Dark2')}
-            else{
-              radarColors = RColorBrewer::brewer.pal(n=3, name='Dark2')
-            }
+            n = nrow(final_radar_data)+1
+            colorblind_pal_set = c("#648FFF", "#FFB000", "#DC267F", "#FE6100", "#785EF0", "#000000")
+            radarColors = colorblind_pal_set[1:n]
           } else{
-            radarColors = grDevices::colorRampPalette(c('cadetblue3', 'blue4'))
-            radarColors = radarColors(nrow(recallDataByVariable))
+            radarColors = viridis::mako(nrow(final_radar_data))
           }
 
           # make a radar plot
@@ -677,9 +665,8 @@ runShinyApp <- function(){
                         RACE_ETH %in% input$race,
                         ageBracket %in% input$age,
                         FAMINC %in% input$income)
-
-        # display number of subjects used
-        paste("Number of Subjects Selected:", nrow(filtered_data))
+        shiny::validate(
+          shiny::need(nrow(filtered_data) > 0, "No individuals selected."))
       })
 
       #### Scoring Plots ####
@@ -695,6 +682,8 @@ runShinyApp <- function(){
                         RACE_ETH %in% input$scoringRace,
                         ageBracket %in% input$scoringAge,
                         FAMINC %in% input$scoringIncome)
+        shiny::validate(
+          shiny::need(nrow(filtered_scoringData) > 0, "No individuals selected."))
 
         #set y limit for plotting based on input variable
         if(input$scoringVariable == "Total Score"){
@@ -702,6 +691,11 @@ runShinyApp <- function(){
         }
         else{
           ymax = hei_standards_2020$max_points[hei_standards_2020$component == input$scoringVariable]
+        }
+        if(input$scoringVariable == "Total Score" | input$scoringVariable == "TFACIDS"){
+          filtered_scoringData <- filtered_scoringData %>%
+            dplyr::mutate(TOT_TFACIDS = (DR1_MONOPOLY + DR2_MONOPOLY) / (DR1TSFAT + DR2TSFAT)) %>%
+            dplyr::select(-c(DR1_TFACIDS, DR2_TFACIDS))
         }
 
         ##### Simple Scoring #####
@@ -733,6 +727,7 @@ runShinyApp <- function(){
             else{
               finalSimpleScores <- simpleScoreApp(filtered_scoringData, input$scoringVariable, scoringStandards) %>%
                 tidyr::drop_na()
+
             }
           }
 
@@ -762,6 +757,14 @@ runShinyApp <- function(){
                             RACE_ETH %in% input$scoringRace,
                             ageBracket %in% input$scoringAge,
                             FAMINC %in% input$scoringIncome)
+            shiny::validate(
+              shiny::need(nrow(filtered_scoringData) > 0, "No individuals selected."))
+
+            if(input$scoringVariable == "Total Score" | input$scoringVariable == "TFACIDS"){
+              filtered_scoringData <- filtered_scoringData %>%
+                dplyr::mutate(TOT_TFACIDS = (DR1_MONOPOLY + DR2_MONOPOLY) / (DR1TSFAT + DR2TSFAT)) %>%
+                dplyr::select(-c(DR1_TFACIDS, DR2_TFACIDS))
+            }
 
             if(nrow(filtered_scoringData) == 0){
               finalSimpleScores <- data.frame(
@@ -874,17 +877,15 @@ runShinyApp <- function(){
 
             #colors for plots by demographic
             if(input$scoringDemographic=='FAMINC'){
-              radarColors = grDevices::colorRampPalette(c('cadetblue3', 'blue4'))
-              radarColors2 = grDevices::colorRampPalette(c('coral', 'coral4'))
+              radarColors = grDevices::colorRampPalette(c("#FFBE6A","#40B0A6"))
+              radarColors2 = grDevices::colorRampPalette(c("#0072B2","#000000"))
               radarColors = c(radarColors(12), radarColors2(5))
             } else if(input$scoringDemographic=='RACE_ETH' | input$scoringDemographic=='SEX'){
-              if(nrow(scoringDataByVariable) >= 3){radarColors = RColorBrewer::brewer.pal(n=nrow(scoringDataByVariable), name='Dark2')}
-              else{
-                radarColors = RColorBrewer::brewer.pal(n=3, name='Dark2')
-              }
+              n = nrow(scoresTable)+1
+              colorblind_pal_set = c("#648FFF", "#FFB000", "#DC267F", "#FE6100", "#785EF0", "#000000")
+              radarColors = colorblind_pal_set[1:n]
             } else{
-              radarColors = grDevices::colorRampPalette(c('cadetblue3', 'blue4'))
-              radarColors = radarColors(nrow(scoringDataByVariable))
+              radarColors = viridis::mako(nrow(scoresTable))
             }
 
             #plot as a radar plot
@@ -911,6 +912,14 @@ runShinyApp <- function(){
                                 RACE_ETH %in% input$scoringRace,
                                 ageBracket %in% input$scoringAge,
                                 FAMINC %in% input$scoringIncome)
+                shiny::validate(
+                  shiny::need(nrow(filtered_scoringData2) > 0, "No individuals selected."))
+
+                if(input$scoringVariable == "Total Score" | input$scoringVariable == "TFACIDS"){
+                  filtered_scoringData2 <- filtered_scoringData2 %>%
+                    dplyr::mutate(TOT_TFACIDS = (DR1_MONOPOLY + DR2_MONOPOLY) / (DR1TSFAT + DR2TSFAT)) %>%
+                    dplyr::select(-c(DR1_TFACIDS, DR2_TFACIDS))
+                }
 
                 scoresTable <- filtered_scoringData2 %>%
                   dplyr::select(scoringDemographicVariable) %>%
@@ -1035,6 +1044,14 @@ runShinyApp <- function(){
                                 RACE_ETH %in% input$scoringRace,
                                 ageBracket %in% input$scoringAge,
                                 FAMINC %in% input$scoringIncome)
+                shiny::validate(
+                  shiny::need(nrow(filtered_scoringData2) > 0, "No individuals selected."))
+
+                if(input$scoringVariable == "Total Score" | input$scoringVariable == "TFACIDS"){
+                  filtered_scoringData2 <- filtered_scoringData2 %>%
+                    dplyr::mutate(TOT_TFACIDS = (DR1_MONOPOLY + DR2_MONOPOLY) / (DR1TSFAT + DR2TSFAT)) %>%
+                    dplyr::select(-c(DR1_TFACIDS, DR2_TFACIDS))
+                }
 
                 scoresTable <- filtered_scoringData2 %>%
                   dplyr::select(scoringDemographicVariable) %>%
@@ -1107,17 +1124,15 @@ runShinyApp <- function(){
 
             #colors for plots by demographic
             if(input$scoringDemographic=='FAMINC'){
-              radarColors = grDevices::colorRampPalette(c('cadetblue3', 'blue4'))
-              radarColors2 = grDevices::colorRampPalette(c('coral', 'coral4'))
+              radarColors = grDevices::colorRampPalette(c("#FFBE6A","#40B0A6"))
+              radarColors2 = grDevices::colorRampPalette(c("#0072B2","#000000"))
               radarColors = c(radarColors(12), radarColors2(5))
             } else if(input$scoringDemographic=='RACE_ETH' | input$scoringDemographic=='SEX'){
-              if(nrow(scoresTable) >= 3){radarColors = RColorBrewer::brewer.pal(n=nrow(scoresTable), name='Dark2')}
-              else{
-                radarColors = RColorBrewer::brewer.pal(n=3, name='Dark2')
-              }
+              n = nrow(scoresTable)+1
+              colorblind_pal_set = c("#648FFF", "#FFB000", "#DC267F", "#FE6100", "#785EF0", "#000000")
+              radarColors = colorblind_pal_set[1:n]
             } else{
-              radarColors = grDevices::colorRampPalette(c('cadetblue3', 'blue4'))
-              radarColors = radarColors(nrow(scoresTable))
+              radarColors = viridis::mako(nrow(scoresTable))
             }
 
             plot1_mean_individual <- ggplot2::ggplot(scoresTable, ggplot2::aes(x = !!scoringDemographicVariable, y = score, fill=!!scoringDemographicVariable)) +
@@ -1140,6 +1155,15 @@ runShinyApp <- function(){
                               RACE_ETH %in% input$scoringRace,
                               ageBracket %in% input$scoringAge,
                               FAMINC %in% input$scoringIncome)
+
+              shiny::validate(
+                shiny::need(nrow(filtered_scoringData) > 0, "No individuals selected."))
+
+              if(input$scoringVariable == "Total Score" | input$scoringVariable == "TFACIDS"){
+                filtered_scoringData <- filtered_scoringData %>%
+                  dplyr::mutate(TOT_TFACIDS = (DR1_MONOPOLY + DR2_MONOPOLY) / (DR1TSFAT + DR2TSFAT)) %>%
+                  dplyr::select(-c(DR1_TFACIDS, DR2_TFACIDS))
+              }
 
               filtered_scoringData <- filtered_scoringData %>%
                 dplyr::select(dplyr::contains(input$scoringVariable), dplyr::contains("KCAL"), WTDR2D, scoringDemographicVariable) %>%
@@ -1179,6 +1203,9 @@ runShinyApp <- function(){
             dplyr::select(SEQN, WTDR2D, dplyr::contains(unlist(variableList_heiComponents)), DR1TKCAL, DR2TKCAL) %>%
             tidyr::drop_na()
 
+          shiny::validate(
+            shiny::need(nrow(filtered_scoringData) > 0, "No individuals selected."))
+
           subject_num <- nrow(filtered_scoringData)
 
           if(input$secondDataset != 'None'){
@@ -1190,6 +1217,9 @@ runShinyApp <- function(){
                             FAMINC %in% input$scoringIncome) %>%
               dplyr::select(SEQN, WTDR2D, dplyr::contains(unlist(variableList_heiComponents)), DR1TKCAL, DR2TKCAL) %>%
               tidyr::drop_na()
+
+            shiny::validate(
+              shiny::need(nrow(filtered_scoringData2) > 0, "No individuals selected."))
 
             subject_num <- subject_num + nrow(filtered_scoringData2)
           }}
@@ -1204,6 +1234,10 @@ runShinyApp <- function(){
             dplyr::select(SEQN, WTDR2D, dplyr::contains(input$scoringVariable), DR1TKCAL, DR2TKCAL) %>%
             tidyr::drop_na()
 
+          shiny::validate(
+            shiny::need(nrow(filtered_scoringData) > 0, "No individuals selected."))
+
+
 
           subject_num <- nrow(filtered_scoringData)
 
@@ -1217,10 +1251,12 @@ runShinyApp <- function(){
               dplyr::select(SEQN, WTDR2D, dplyr::contains(input$scoringVariable), DR1TKCAL, DR2TKCAL) %>%
               tidyr::drop_na()
 
+            shiny::validate(
+              shiny::need(nrow(filtered_scoringData2) > 0, "No individuals selected."))
+
             subject_num <- subject_num + nrow(filtered_scoringData2)
           }}
 
-        paste("Number of Subjects Selected:", subject_num)
       })
 
       ###Demographics Plots###
@@ -1232,6 +1268,9 @@ runShinyApp <- function(){
                         RACE_ETH %in% input$demoRace,
                         ageBracket %in% input$demoAge,
                         FAMINC %in% input$demoIncome)
+
+        shiny::validate(
+          shiny::need(nrow(filtered_demoData) > 0, "No individuals selected."))
 
         if(input$selectDemo == "Sex"){
           ggplot2::ggplot(filtered_demoData, ggplot2::aes(x = SEX, y = ggplot2::after_stat(prop), group = 1), stat = "count") +
@@ -1281,7 +1320,9 @@ runShinyApp <- function(){
           dplyr::select(WTDR2D, dplyr::contains(input$selectDemo)) %>%
           tidyr::drop_na()
 
-        paste("Number of Subjects Selected:", nrow(filtered_demoData))
+        shiny::validate(
+          shiny::need(nrow(filtered_demoData) > 0, "No individuals selected."))
+
       })
     }
 

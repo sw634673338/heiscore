@@ -28,7 +28,13 @@ utils::globalVariables(c(
   "xVarMax",
   "prop",
   "recalls",
-  "kcal"
+  "kcal",
+  "DR1_MONOPOLY",
+  "DR2_MONOPOLY",
+  "DR1TSFAT",
+  "DR2TSFAT",
+  "DR1_TFACIDS",
+  "DR2_TFACIDS"
 ))
 
 ignore_unused_imports <- function(){

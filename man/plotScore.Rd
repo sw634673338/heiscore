@@ -6,38 +6,37 @@
 \usage{
 plotScore(
   graph = NULL,
-  scoringMethod,
+  method,
   years,
-  heiComponent,
-  demographicGroup = NULL,
+  component,
+  demo = NULL,
   sex = c("Female", "Male"),
-  raceEthnicity = c("Asian", "White", "Black", "Other", "Mexican American",
-    "Other Hispanic"),
+  race = c("Asian", "White", "Black", "Other", "Mexican American", "Other Hispanic"),
   age = c(2, 100),
-  familyIncome = c("[0, 5000)", "[5000, 10000)", "[10000, 15000)", "[15000, 20000)",
+  income = c("[0, 5000)", "[5000, 10000)", "[10000, 15000)", "[15000, 20000)",
     "[20000, 25000)", "[25000, 35000)", "[35000, 45000)", "[45000, 55000)",
     "[55000, 65000)", "[65000, 75000)", "75000+", "[75000, 100000)", ">100000", ">20000",
     "<20000", "Refused", "Don't know", "NA")
 )
 }
 \arguments{
-\item{graph}{The desired graph type. Choose "Histogram" when scoringMethod = "Simple". Choose "Bar" when scoringMethod = "Pop Ratio" or "Mean Ratio" and heiComponent is not "Total Score". Choose "Bar" or "Radar" when scoringMethod = "Pop Ratio" or "Mean Ratio" and heiComponent = "Total Score"}
+\item{graph}{A single character string with the desired graph type. Choose "histogram" when method = "simple". Choose "bar" when method = "pop ratio" or "mean ratio" and component is not "total score". Choose "bar" or "radar" when method = "pop ratio" or "mean ratio" and component = "total score"}
 
-\item{scoringMethod}{The HEI scoring method to use. Choose from "Simple," "Pop Ratio," or "Mean Ratio."}
+\item{method}{A single character string with the HEI scoring method to use. Choose from "simple", "pop ratio", or "mean ratio".}
 
-\item{years}{The NHANES cycle to select, choose from: "0506," "0708," "0910," "1112," "1314," "1516," or "1718. etc.}
+\item{years}{A single character string representing the NHANES cycle to select, choose from: "0506", "0708", "0910", "1112", "1314", "1516", or "1718".}
 
-\item{heiComponent}{The HEI component to score and plot. Options include "Total Score", "Total Fruit", "Whole Fruits", "Total Vegetables", "Greens and Beans", "Whole Grains", "Total Dairy", "Total Protein", "Seafood and Plant Proteins", "Fatty Acids", "Refined Grains", "Sodium", "Added Sugars", and "Saturated Fat".}
+\item{component}{A single character string with the HEI component to score and plot. Options include "total score", "total fruit", "whole fruits", "total vegetables", "greens and beans", "whole grains", "total dairy", "total protein", "seafood and plant proteins", "fatty acids", "refined grains", "sodium", "added sugars", and "saturated fat".}
 
-\item{demographicGroup}{The demographic grouping by which the data should be scored. If scoringMethod = "Simple", choose NULL as the demographicGroup. Otherwise, choose from "Sex", "Race/Ethnicity", "Age", or "Family Income".}
+\item{demo}{A single character string with the demographic grouping by which the data should be scored or NULL. If method = "simple", choose NULL as the demo. Otherwise, choose from "sex", "race", "age", or "income".}
 
-\item{sex}{a vector of the sexes in desired subpopulation. Provide a vector with "Female", "Male", or both.}
+\item{sex}{A vector of the sexes in the desired subpopulation. Provide a vector with the character strings "Female", "Male", or both.}
 
-\item{raceEthnicity}{a vector of races/ethnicities in desired subpopulation. Provide a vector including any combination of the following: "Asian", "White", "Black", "Other", "Mexican American", "Other Hispanic",}
+\item{race}{A vector of races/ethnicities in the desired subpopulation. Provide a vector including any combination of the following character strings: "Asian", "White", "Black", "Other", "Mexican American", and "Other Hispanic".}
 
-\item{age}{a vector in the form c(min, max) with two numbers specifying the desired age range to analyze. Both numbers should either be between 0 and 1 or 2 and above.}
+\item{age}{A vector in the form c(min, max) with two integers specifying the desired age range to analyze. Both integers should either be ones (to represent the toddler age group including ages 12-23 months) or 2 and above.}
 
-\item{familyIncome}{a vector of family income brackets in the desired subpopulation. Provide a vector including any combination of the following: "[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)","[75000, 100000)", "75000+",">100000", ">20000","<20000","Refused","Don't know", "NA"}
+\item{income}{A vector of family income brackets in the desired subpopulation. Provide a vector including any combination of the following character strings: "[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)","[75000, 100000)", "75000+",">100000", ">20000","<20000","Refused","Don't know", "NA".}
 }
 \value{
 A base R plot or a ggplot object with the specified plot
@@ -46,38 +45,27 @@ A base R plot or a ggplot object with the specified plot
 This function plots HEI component or total scores using the inputted scoring method and graph type. The user can subset the data to only include subjects in specific demographic groups
 }
 \examples{
-library(ggplot2)
-library(grDevices)
-library(RColorBrewer)
-library(rlang)
-library(magrittr)
-library(dplyr)
-library(tibble)
-library(rlang)
-library(stats)
-library(tidyr)
-
 # Plot the Total Dairy component score from the 2005-06 NHANES data using the
-# "Simple" method.
+# "simple" method.
 
-dairy_plot <- plotScore(graph = "Histogram",
-                        scoringMethod = "Simple",
+dairy_plot <- plotScore(graph = "histogram",
+                        method = "simple",
                         years = "0506",
-                        heiComponent = "Total Dairy")
+                        component = "total dairy")
 dairy_plot
 
 # Create a radar plot to display the total HEI score by race/ethnicity using
 # the mean ratio method for subjects that are male, more than 50 years old,
 # with a family income in the range [65000, 75000) for the 2015-16 NHANES
 # cycle.
-radar_example_plot <- plotScore(graph = "Radar",
-                    scoringMethod = "Mean Ratio",
+radar_example_plot <- plotScore(graph = "radar",
+                    method = "mean ratio",
                     years = "1516",
-                    heiComponent = "Total Score",
-                    demographicGroup = "Race/Ethnicity",
+                    component = "total score",
+                    demo = "race",
                     sex = "Male",
                     age = c(50, 150),
-                    familyIncome = "[65000, 75000)")
+                    income = "[65000, 75000)")
 radar_example_plot
 
 }
