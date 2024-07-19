@@ -1,0 +1,80 @@
+---
+output: github_document
+---
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.path = "man/figures/README-",
+  out.width = "100%"
+)
+```
+
+# heiscore
+
+<!-- badges: start -->
+
+<!-- badges: end -->
+
+## Overview
+
+The heiscore package aims to increase the accessibility of evaluating a population's dietary habits using the Healthy Eating Index (HEI) and enable straightforward comparisons of the diet quality of different demographic subgroups. It allows users with minimal technical experience to obtain preloaded dietary recall data from the National Health and Nutrition Examination Survey (NHANES) and use it calculate HEI scores that are representative of the U.S. population using three distinct methods prescribed by the National Cancer Institute. Additionally, heiscore includes functions that visualize this multidimensional diet quality data via various graphing techniques including histograms, bar charts, and radar charts. These plots facilitate clear comparisons of dietary patterns between sub-populations in the U.S. and across several years.
+
+heiscore's four functions:
+
+-   `selectDataset()` retrieves a tibble containing NHANES dietary recall data converted to relevant food groups (the U.S. Department of Agriculture's Food Patterns Components) and demographic data for the chosen years.
+-   `score()` calculates HEI scores for the chosen time period and demographic subgroups.
+-   `plotScore()` graphs HEI score distributions for the chosen time period and demographic subgroups.
+-   `runShinyApp()` launches an interactive R shiny app that plots the distributions of raw dietary data, demographic information, and HEI scores with options to compare years and demographic subgroups of interest
+
+## Installation
+
+```{r, eval = FALSE}
+# Install the heiscore package from CRAN
+install.packages("heiscore")
+
+```
+
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+```{r example, fig.width=11, fig.height=7}
+library(heiscore)
+
+# Retrieve NHANES dietary data converted to Food Patterns components and 
+# demographic data for 2017 and 2018 
+selectDataset(years = '1718')
+
+# Produce 2011-12 HEI scores for the Total Fruit component using the Mean Ratio 
+# scoring method. Only include white and black women aged 50 to 100 with a 
+# family income of $75,000 or more. Display the results by race/ethnicity. 
+score(method = "Mean Ratio",
+      years = "1112",
+      component = "Total Fruit",
+      demo = "Race",
+      sex = ("Female"),
+      race = c("White", "Black"),
+      age = c(50, 100),
+      income = c("[75000, 100000)", "75000+", ">100000"))
+
+# Create a radar plot that displays the breakdown of HEI score components by 
+# family income level. Use 2017-18 NHANES data and the Population Ratio Method 
+# for scoring.
+plotScore(graph = "Radar", 
+          method = "Pop Ratio", 
+          years = "1718", 
+          component = "Total Score", 
+          demo = "income", 
+          income = c("[0, 5000)", "[15000, 20000)", "[35000, 45000)", "[45000, 55000)", 
+                           "[55000, 65000)", "[65000, 75000)", "[75000, 100000)", ">100000"))
+
+```
+
+```{r, eval=FALSE}
+# Launch the interactive Shiny app
+runShinyApp()
+```
