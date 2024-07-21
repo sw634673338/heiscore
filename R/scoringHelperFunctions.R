@@ -71,7 +71,7 @@ meanRatioScore <- function(rawData, scoringVariable, scoringDemographicVariable,
 
   meanRatioData <- rawData %>%
     dplyr::mutate(recall = rowSums(dplyr::select(.,dplyr::contains(scoringVariable)), na.rm = TRUE),
-           KCAL = rowSums(dplyr::across(c(DR1TKCAL, DR2TKCAL)), na.rm = TRUE),
+           KCAL = rowSums(dplyr::across(c(DR1TKCAL, DR2TKCAL)), na.rm = FALSE),
            ratio = dplyr::case_when(scoringVariable == "TSODI" ~ recall / KCAL,
                              scoringVariable == "TSFAT" ~ recall * 9 / KCAL * 100,
                              scoringVariable == "ADD_SUGARS" ~ recall * 16  / KCAL * 100,
