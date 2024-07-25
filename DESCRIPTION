@@ -1,6 +1,6 @@
 Package: heiscore
 Title: Score and Plot the Healthy Eating Index from NHANES Data
-Version: 0.1.2
+Version: 0.1.3
 Authors@R: c(
     person("Vijetha", "Ramdas", , "vramdas06@gmail.com", role = c("aut", "cre")),
     person("Berkeley", "Ho", , "berknho@utexas.edu", role = "aut"),
