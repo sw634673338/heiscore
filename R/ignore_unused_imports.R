@@ -23,6 +23,7 @@ utils::globalVariables(c(
   "hei_components_1314",
   "hei_components_1516",
   "hei_components_1718",
+  "hei_components_1720",
   "variableList_MCMC",
   "variableList_heiComponents",
   "xVarMax",

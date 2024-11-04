@@ -2,7 +2,7 @@
 #'
 #' This function retrieves a tibble containing the raw 24-hour recall data from the What We Eat in America (WWEIA), National Health and Nutrition Examination Survey (NHANES) converted to the U.S. Department of Agriculture (USDA) Food Patterns components from the NHANES cycle selected.
 #'
-#' @param years A single character string representing the NHANES cycle to select, choose from: "0506", "0708", "0910", "1112", "1314", "1516", or "1718".
+#' @param years A single character string representing the NHANES cycle to select, choose from: "0506", "0708", "0910", "1112", "1314", "1516", "1718", and "1720".
 #'
 #' @return A tibble containing Food Patterns component consumption, sample weights, and demographic information for each subject in the selected NHANES cycle.
 #'

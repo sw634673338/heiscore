@@ -24,11 +24,11 @@ plotScore(
 
 \item{method}{A single character string with the HEI scoring method to use. Choose from "simple", "pop ratio", or "mean ratio".}
 
-\item{years}{A single character string representing the NHANES cycle to select, choose from: "0506", "0708", "0910", "1112", "1314", "1516", or "1718".}
+\item{years}{A single character string representing the NHANES cycle to select, choose from: "0506", "0708", "0910", "1112", "1314", "1516", "1718", or "1720".}
 
 \item{component}{A single character string with the HEI component to score and plot. Options include "total score", "total fruit", "whole fruits", "total vegetables", "greens and beans", "whole grains", "total dairy", "total protein", "seafood and plant proteins", "fatty acids", "refined grains", "sodium", "added sugars", and "saturated fat".}
 
-\item{demo}{A single character string with the demographic grouping by which the data should be scored or NULL. If method = "simple", choose NULL as the demo. Otherwise, choose from "sex", "race", "age", or "income".}
+\item{demo}{A single character string with the demographic grouping by which the data should be scored or NULL. If method = "simple", choose NULL as the demo. Otherwise, choose from "sex", "race", "age", or "income". If the "1720" cycle is selected, "income" is not a valid demo choice since this variable is not provided in the NHANES 2017-March 2020 data.}
 
 \item{sex}{A vector of the sexes in the desired subpopulation. Provide a vector with the character strings "Female", "Male", or both.}
 
@@ -36,7 +36,7 @@ plotScore(
 
 \item{age}{A vector in the form c(min, max) with two integers specifying the desired age range to analyze. Both integers should either be ones (to represent the toddler age group including ages 12-23 months) or 2 and above.}
 
-\item{income}{A vector of family income brackets in the desired subpopulation. Provide a vector including any combination of the following character strings: "[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)","[75000, 100000)", "75000+",">100000", ">20000","<20000","Refused","Don't know", "NA".}
+\item{income}{A vector of family income brackets in the desired subpopulation. Provide a vector including any combination of the following character strings: "[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)","[75000, 100000)", "75000+",">100000", ">20000","<20000","Refused","Don't know", "NA". For the "1720" cycle, all observations have "NA" as the FAMINC variable since this variable is not provided in the NHANES 2017-March 2020 data.}
 }
 \value{
 A base R plot or a ggplot object with the specified plot

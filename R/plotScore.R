@@ -3,13 +3,13 @@
 #' This function plots HEI component or total scores using the inputted scoring method and graph type. The user can subset the data to only include subjects in specific demographic groups
 #' @param graph A single character string with the desired graph type. Choose "histogram" when method = "simple". Choose "bar" when method = "pop ratio" or "mean ratio" and component is not "total score". Choose "bar" or "radar" when method = "pop ratio" or "mean ratio" and component = "total score"
 #' @param method A single character string with the HEI scoring method to use. Choose from "simple", "pop ratio", or "mean ratio".
-#' @param years A single character string representing the NHANES cycle to select, choose from: "0506", "0708", "0910", "1112", "1314", "1516", or "1718".
+#' @param years A single character string representing the NHANES cycle to select, choose from: "0506", "0708", "0910", "1112", "1314", "1516", "1718", or "1720".
 #' @param component A single character string with the HEI component to score and plot. Options include "total score", "total fruit", "whole fruits", "total vegetables", "greens and beans", "whole grains", "total dairy", "total protein", "seafood and plant proteins", "fatty acids", "refined grains", "sodium", "added sugars", and "saturated fat".
-#' @param demo A single character string with the demographic grouping by which the data should be scored or NULL. If method = "simple", choose NULL as the demo. Otherwise, choose from "sex", "race", "age", or "income".
+#' @param demo A single character string with the demographic grouping by which the data should be scored or NULL. If method = "simple", choose NULL as the demo. Otherwise, choose from "sex", "race", "age", or "income". If the "1720" cycle is selected, "income" is not a valid demo choice since this variable is not provided in the NHANES 2017-March 2020 data.
 #' @param sex A vector of the sexes in the desired subpopulation. Provide a vector with the character strings "Female", "Male", or both.
 #' @param race A vector of races/ethnicities in the desired subpopulation. Provide a vector including any combination of the following character strings: "Asian", "White", "Black", "Other", "Mexican American", and "Other Hispanic".
 #' @param age A vector in the form c(min, max) with two integers specifying the desired age range to analyze. Both integers should either be ones (to represent the toddler age group including ages 12-23 months) or 2 and above.
-#' @param income  A vector of family income brackets in the desired subpopulation. Provide a vector including any combination of the following character strings: "[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)","[75000, 100000)", "75000+",">100000", ">20000","<20000","Refused","Don't know", "NA".
+#' @param income  A vector of family income brackets in the desired subpopulation. Provide a vector including any combination of the following character strings: "[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)","[75000, 100000)", "75000+",">100000", ">20000","<20000","Refused","Don't know", "NA". For the "1720" cycle, all observations have "NA" as the FAMINC variable since this variable is not provided in the NHANES 2017-March 2020 data.
 #'
 #' @return A base R plot or a ggplot object with the specified plot
 #'
@@ -95,10 +95,17 @@ plotScore <- function(graph = NULL, method, years, component, demo = NULL, sex =
   }
 
   # demographic option
-  demo_list <- list( "sex" = "SEX",
-                     "race" = "RACE_ETH",
-                     "age" = "ageBracket",
-                     "income" = "FAMINC")
+  if(years == "1720"){
+    demo_list <- list( "sex" = "SEX",
+                       "race" = "RACE_ETH",
+                       "age" = "ageBracket")
+  }
+  else{
+    demo_list <- list( "sex" = "SEX",
+                       "race" = "RACE_ETH",
+                       "age" = "ageBracket",
+                       "income" = "FAMINC")
+  }
 
   demographicGroup <- demo
   if(is.null(demographicGroup)){
@@ -179,14 +186,14 @@ plotScore <- function(graph = NULL, method, years, component, demo = NULL, sex =
       ggplot2::ylab("Proportion") +
       ggplot2::xlab(stringr::str_to_title(heiComponent)) +
       ggplot2::theme_classic() +
-      ggplot2::theme(axis.text=ggplot2::element_text(color="black", size=11),
-                     axis.title = ggplot2::element_text(face="bold", size=15)) +
-      ggplot2::xlim(0, axisMax) +
-      if(heiComponent != "total score"){
-        ggplot2::ggtitle(paste0("Weighted Histogram of ", stringr::str_to_title(heiComponent), " Scores"))
-      } else{
-        ggplot2::ggtitle(paste0("Weighted Histogram of Total Scores"))
-      }
+      ggplot2::theme(axis.text=ggplot2::element_text(color="black", size=11)) +
+                     #axis.title = ggplot2::element_text(face="bold", size=15)) +
+      ggplot2::xlim(0, axisMax) #+
+      # if(heiComponent != "total score"){
+      #   ggplot2::ggtitle(paste0("Weighted Histogram of ", stringr::str_to_title(heiComponent), " Scores"))
+      # } else{
+      #   ggplot2::ggtitle(paste0("Weighted Histogram of Total Scores"))
+      # }
     return(result_plot)
 
   } # end plotting simple Score
@@ -210,21 +217,21 @@ plotScore <- function(graph = NULL, method, years, component, demo = NULL, sex =
     if(graph == "bar"){
       demoVar <- rlang::sym(colnames(score_output)[1])
       score <- rlang::sym("score")
-
       result_plot <- ggplot2::ggplot(score_output) +
         ggplot2::geom_bar(ggplot2::aes(x=!!demoVar, y=!!score, fill = !!demoVar), stat="identity") +
-        ggplot2::labs(title = paste(stringr::str_to_title(scoringMethod), "Scores by", stringr::str_to_title(demographicGroup)), x = stringr::str_to_title(demographicGroup), y = "Score") +
+        #ggplot2::labs(title = paste(stringr::str_to_title(scoringMethod), "Scores by", stringr::str_to_title(demographicGroup))) +
+        ggplot2::labs(x = stringr::str_to_title(demographicGroup), y = "Score") +
         ggplot2::theme_classic() +
         ggplot2::scale_fill_manual(values=radarColors) +
         ggplot2::ylim(0, axisMax)  +
         ggplot2::guides(fill=ggplot2::guide_legend(title=stringr::str_to_title(demographicGroup))) +
-        if(demographicGroup == "Family Income"){
+        if(demographicGroup == "income"){
           ggplot2::theme(axis.text=ggplot2::element_text(color="black", size=11),
-                         axis.title = ggplot2::element_text(face="bold", size=15),
+                         #axis.title = ggplot2::element_text(face="bold", size=15),
                          axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust=1))
         } else{
-          ggplot2::theme(axis.text=ggplot2::element_text(color="black", size=11),
-                         axis.title = ggplot2::element_text(face="bold", size=15))
+          ggplot2::theme(axis.text=ggplot2::element_text(color="black", size=11))
+                         #axis.title = ggplot2::element_text(face="bold", size=15))
         }
       return(result_plot)
 

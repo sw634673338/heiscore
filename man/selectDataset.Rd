@@ -7,7 +7,7 @@
 selectDataset(years)
 }
 \arguments{
-\item{years}{A single character string representing the NHANES cycle to select, choose from: "0506", "0708", "0910", "1112", "1314", "1516", or "1718".}
+\item{years}{A single character string representing the NHANES cycle to select, choose from: "0506", "0708", "0910", "1112", "1314", "1516", "1718", and "1720".}
 }
 \value{
 A tibble containing Food Patterns component consumption, sample weights, and demographic information for each subject in the selected NHANES cycle.

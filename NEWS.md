@@ -1,3 +1,13 @@
+# heiscore 0.2.0
+
+* Added the 2017-March 2020 Pre-Pandemic NHANES Data
+
+# heiscore 0.1.4
+
+* Removed redundant plot titles
+
+* Changed bold font axis labels to regular text
+
 # heiscore 0.1.3
 
 * Reduced the size of the data directory by rounding raw dietary intake values without impacting the accuracy of HEI calculations. 

@@ -75,7 +75,7 @@ runShinyApp <- function(){
   if (interactive()) {
 
     #### Select/clean data, create ageBracket variable ####
-    files <- c("fped_0506", "fped_0708", "fped_0910", "fped_1112", "fped_1314", "fped_1516", "fped_1718")
+    files <- c("fped_0506", "fped_0708", "fped_0910", "fped_1112", "fped_1314", "fped_1516", "fped_1718", "fped_1720")
 
     for(file in files){
       #read in file
@@ -101,7 +101,7 @@ runShinyApp <- function(){
 
       comp_file$ageBracket <- factor(comp_file$ageBracket, levels = c("Toddler (12 - 23 mo.)", "[2,10)", "[10,20)", "[20,30)", "[30,40)", "[40,50)", "[50,60)", "[60,70)", "[70,80)", "80+" ))
 
-      comp_file$FAMINC[comp_file$FAMINC==''] <- "NA"
+      comp_file$FAMINC[is.na(comp_file$FAMINC)] <- "NA"
 
       comp_file$FAMINC <- factor(comp_file$FAMINC, levels = c("[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)", "75000+", "[75000, 100000)", ">100000", "<20000", ">20000","Refused","Don't know", "NA"))
 
@@ -115,7 +115,7 @@ runShinyApp <- function(){
     hei_standards_toddler_2020 <- HEI_scoring_standards_toddlers
 
     # list of all datasets to reference
-    all_datasets <-  list(hei_components_0506, hei_components_0708, hei_components_0910, hei_components_1112, hei_components_1314, hei_components_1516,  hei_components_1718)
+    all_datasets <-  list(hei_components_0506, hei_components_0708, hei_components_0910, hei_components_1112, hei_components_1314, hei_components_1516,  hei_components_1718, hei_components_1720)
 
     #####UI#####
     ui <- shiny::fluidPage(
@@ -157,7 +157,7 @@ runShinyApp <- function(){
                         #useShinyjs(),
                         shiny::sidebarLayout(
                           shiny::sidebarPanel(
-                            shinyWidgets::pickerInput("demoDataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected = "2017-18"),
+                            shinyWidgets::pickerInput("demoDataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18", "2017-20"), selected = "2017-18"),
                             shinyWidgets::pickerInput('selectDemo', 'Choose a Demographic',
                                                choices=c("Sex", "Race", "Age", "Income")),
                             shinyWidgets::pickerInput("demoSex", "Select Sex", choices = NULL, multiple = TRUE, options = shinyWidgets::pickerOptions(actionsBox = TRUE)),
@@ -174,7 +174,7 @@ runShinyApp <- function(){
         shiny::tabPanel('Recalls',
                         shiny::sidebarLayout(
                           shiny::sidebarPanel(
-                            shinyWidgets::pickerInput("dataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected = "2017-18"),
+                            shinyWidgets::pickerInput("dataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18", "2017-20"), selected = "2017-18"),
                             shiny::radioButtons("componentType", "Select Component Type",
                                                 choices = list("Dietary Constituents" = 1,
                                                                "Dietary Components" = 2),
@@ -215,8 +215,8 @@ runShinyApp <- function(){
                           shiny::sidebarPanel(
                             shinyWidgets::pickerInput('scoringMethod', 'Choose a Scoring Method',
                                                choices=c('Simple', 'Mean Ratio', 'Population Ratio')),
-                            shinyWidgets::pickerInput("scoringDataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected = "2017-18"),
-                            shinyWidgets::pickerInput('secondDataset', 'Compare with a Second Dataset', choices=c('None', "2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18"), selected='None'),
+                            shinyWidgets::pickerInput("scoringDataset", "Select Dataset", choices = c("2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18", "2017-20"), selected = "2017-18"),
+                            shinyWidgets::pickerInput('secondDataset', 'Compare with a Second Dataset', choices=c('None', "2005-06", "2007-08", "2009-10", "2011-12", "2013-14", "2015-16", "2017-18", "2017-20"), selected='None'),
                             shinyWidgets::pickerInput('scoringVariable', 'Select Variable', choices = c("Total Score", variableList_heiComponents[-c(1)])),
                             shinyWidgets::pickerInput('scoringAgeChoice', 'Select Age Group', choices=c('Population 2 Years and Older', 'Toddlers (12 through 23 Months)')),
                             shinyWidgets::pickerInput('scoringDemographic', 'Choose a Demographic',
@@ -260,7 +260,8 @@ runShinyApp <- function(){
                "2011-12" = hei_components_1112,
                "2013-14" = hei_components_1314,
                "2015-16" = hei_components_1516,
-               "2017-18" = hei_components_1718)
+               "2017-18" = hei_components_1718,
+               "2017-20" = hei_components_1720)
       })
 
       #switch for scoring dataset selection
@@ -272,8 +273,9 @@ runShinyApp <- function(){
                "2011-12" = hei_components_1112,
                "2013-14" = hei_components_1314,
                "2015-16" = hei_components_1516,
-               "2017-18" = hei_components_1718)
-      })
+               "2017-18" = hei_components_1718,
+               "2017-20" = hei_components_1720)
+        })
 
       #switch for second scoring dataset selection
       secondSelected_scoringDataset <- shiny::reactive({
@@ -284,8 +286,8 @@ runShinyApp <- function(){
                "2011-12" = hei_components_1112,
                "2013-14" = hei_components_1314,
                "2015-16" = hei_components_1516,
-               "2017-18" = hei_components_1718
-        )
+               "2017-18" = hei_components_1718,
+               "2017-20" = hei_components_1720)
       })
 
       #switch for demo dataset selection
@@ -297,8 +299,8 @@ runShinyApp <- function(){
                "2011-12" = hei_components_1112,
                "2013-14" = hei_components_1314,
                "2015-16" = hei_components_1516,
-               "2017-18" = hei_components_1718
-        )
+               "2017-18" = hei_components_1718,
+               "2017-20" = hei_components_1720)
       })
 
       #switch for correct scoring standards
@@ -363,6 +365,9 @@ runShinyApp <- function(){
       shiny::observeEvent(list(input$scoringDataset, input$scoringAgeChoice), {
         # Get the dataset based on the selected option
         dataset <- selected_scoringDataset()
+        if(input$secondDataset != 'None'){
+          dataset2 <- secondSelected_scoringDataset()
+        }
 
         #Get the unique observations of demographic variables and update their respective checkbox options
 
@@ -377,7 +382,13 @@ runShinyApp <- function(){
         else{
           shinyWidgets::updatePickerInput(session, "scoringAge", choices = sort(age_choices)[1], selected = age_choices)
         }
-        inc_choices <- unique(dataset$FAMINC)
+        if(input$secondDataset != 'None'){
+          inc_choices <- unique(c(dataset$FAMINC, dataset2$FAMINC))
+        }
+        else{
+          inc_choices <- unique(dataset$FAMINC)
+        }
+
         shinyWidgets::updatePickerInput(session, "scoringIncome", choices = sort(inc_choices), selected = inc_choices)
       })
 
