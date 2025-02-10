@@ -1,3 +1,6 @@
+# not use heiscore canned package
+# just copy and revise their function
+
 library(tidyr)
 suppressPackageStartupMessages(library(dplyr))
 library(stringr)
@@ -117,3 +120,370 @@ for (year in YEARS){
 # Step 3: attatch datasets from different years
 # wait for it
 #df['a'] <- 1
+
+#' Calculate Healthy Eating Index (HEI) scores from NHANES data
+
+#' This function calculates HEI component or total scores using the inputted scoring method. The user can subset the data to only include subjects in specific demographic groups
+
+score <- function(method, years, component, demo = NULL, sex = c("Female", "Male"), race = c("Asian", "White", "Black", "Other", "Mexican American", "Other Hispanic"), age = c(2, 100), income = c("[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)","[75000, 100000)", "75000+",">100000", ">20000","<20000","Refused","Don't know", "NA")){
+
+  ### VERIFY INPUTS ###
+  # method
+  methodOptions <- c("pop ratio", "mean ratio", "simple")
+  method <- tolower(trimws(method))
+  if(!(method %in% methodOptions)){
+    stop("Enter a valid scoring method.")
+  }
+
+  # years
+  years <- trimws(years)
+  possible_dataset <- get0(paste("fped_", years, sep = ""), envir = asNamespace("heiscore"))
+  if(!is.null(possible_dataset)){
+    rawDataset <- possible_dataset
+  }
+  else{
+    stop("Enter a valid cycle.")
+  }
+
+  # component
+  variableList_heiComponents <- list( "kilocalories" = "KCAL",
+                                      "total fruit" = "F_TOTAL",
+                                      "whole fruits" = "FWHOLEFRT",
+                                      'total vegetables' = 'VTOTALLEG',
+                                      'greens and beans' = 'VDRKGRLEG',
+                                      'whole grains' = 'G_WHOLE',
+                                      'total dairy' = 'D_TOTAL',
+                                      'total protein' = 'PFALLPROTLEG',
+                                      'seafood and plant proteins' = 'PFSEAPLANTLEG',
+                                      'fatty acids' = 'TFACIDS',
+                                      'refined grains' = 'G_REFINED',
+                                      'sodium' = 'TSODI',
+                                      'added sugars' = 'ADD_SUGARS',
+                                      'saturated fat' = 'TSFAT'
+  )
+  heiComponent <- tolower(trimws(component))
+  if(!(heiComponent %in% c(names(variableList_heiComponents)[-c(1)], "total score"))){
+    stop("Enter a valid HEI Component.")
+  }
+
+  # demographic option
+  if(years == "1720"){
+    demoOptions = c("sex", "race", "age")
+  }
+  else{
+    demoOptions = c("sex", "race", "age", "income")
+  }
+
+  demographicGroup <- demo
+  if(is.null(demographicGroup)){
+    if(method!="simple"){
+      stop("Enter a valid demographic option.")
+    }
+  }
+  else{
+    demographicGroup <- tolower(trimws(demographicGroup))
+    if(method == "simple"){
+      stop("Simple scoring requires NULL as the demographic option.")
+    }
+    else if(!(demographicGroup %in% demoOptions)){
+      stop("Enter a valid demographic option.")
+    }
+  }
+
+  demo_list <- list( "sex" = "SEX",
+                     "race" = "RACE_ETH",
+                     "age" = "ageBracket",
+                     "income" = "FAMINC")
+
+  # sex
+  sexOptions <- c("Female", "Male")
+  sex <- stringr::str_to_title(trimws(sex))
+  if(!(all(sex %in% sexOptions))){
+    stop("Enter a valid sex subset option.")
+  }
+
+  # race ethnicity
+  raceEthOptions <- c("Asian", "White", "Black", "Other", "Mexican American", "Other Hispanic")
+  raceEthnicity <-  stringr::str_to_title(trimws(race))
+  if(!(all(raceEthnicity %in% raceEthOptions))){
+    stop("Enter a valid race/ethnicity subset option.")
+  }
+
+  # age
+  if(!is.vector(age) | !length(age) == 2){
+    stop("Enter a valid age subset option.")
+  }
+  else if(any(age < 1)){
+    stop("Age subset option must be greater than or equal to 1.")
+  }
+  else if(age[1] < 2 & age[2] >=2){
+    stop("Age subset cannot include both toddlers (< 2yrs) and non-toddlers (> 2yrs)")
+  }
+  else if(age[1] > age[2]){
+    stop("Age minimum must be less than or equal to age maximum.")
+  }
+
+  # family income
+  famIncOptions <- c("[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)", "75000+","[75000, 100000)", ">100000", ">20000","<20000","Refused","Don't know", "NA")
+  familyIncome <- trimws(income)
+  if(!(all(familyIncome %in% famIncOptions))){
+    stop("Enter a valid family income subset option.")
+  }
+
+  scoringData <- cleanDataset(rawDataset) %>%
+    demoFilter(., sex, raceEthnicity, age, familyIncome)
+
+  ### Scoring ###
+  scoringVariable<- unlist(variableList_heiComponents[heiComponent])
+
+  if(heiComponent == "total score" | heiComponent == "fatty acids"){
+    scoringData <- scoringData %>%
+      dplyr::mutate(TOT_TFACIDS = (DR1_MONOPOLY + DR2_MONOPOLY) / (DR1TSFAT + DR2TSFAT)) %>%
+      dplyr::select(-c(DR1_TFACIDS, DR2_TFACIDS))
+  }
+
+  if(method == "simple"){
+
+    # simple scoring, total score
+    if(heiComponent == "total score"){
+      finalSimpleScores <- scoringData %>%
+        dplyr::select(SEQN, WTDR2D, SEX, AGE, RACE_ETH, FAMINC) %>%
+        tibble::add_column(score = 0)
+
+      for(variables in names(variableList_heiComponents)[-c(1)]){
+
+        scoringVariable<- unlist(variableList_heiComponents[variables])
+        variableSimpleScores <- simpleScore(scoringData, scoringVariable, age[1])
+
+        finalSimpleScores <- finalSimpleScores %>%
+          dplyr::left_join(., variableSimpleScores, by = c("SEQN", "WTDR2D", "SEX", "AGE", "RACE_ETH", "FAMINC")) %>%
+          dplyr::select(SEQN, WTDR2D, SEX, AGE, RACE_ETH, FAMINC, dplyr::contains("score"))
+      }
+
+      finalSimpleScores <- finalSimpleScores[-c(7)]
+      colnames(finalSimpleScores)[-c(1:6)] <- names(variableList_heiComponents[-c(1)])
+
+      finalSimpleScores <- finalSimpleScores %>%
+        dplyr::mutate(score = rowSums(.[setdiff(names(.),c("SEQN", "WTDR2D", "SEX", "AGE", "RACE_ETH", "FAMINC"))])) %>%
+        dplyr::mutate(dplyr::across(c(SEX, AGE, RACE_ETH, FAMINC), as.factor)) %>%
+        tidyr::drop_na(score)
+      colnames(finalSimpleScores)[-c(1:6, 20)] <- unname(unlist(variableList_heiComponents))[-c(1)]
+      return(finalSimpleScores)
+
+    }
+    # simple scoring, single variables
+    else{
+      finalScoringData <- scoringData %>%
+        dplyr::select(SEQN, dplyr::contains(scoringVariable), dplyr::contains("KCAL"), WTDR2D, SEX, AGE, RACE_ETH, FAMINC)
+
+      finalSimpleScores <- simpleScore(finalScoringData, scoringVariable, age[1]) %>%
+        dplyr::select(SEQN, WTDR2D, SEX, AGE, RACE_ETH, FAMINC, score) %>%
+        dplyr::mutate(dplyr::across(c(SEX, AGE, RACE_ETH, FAMINC), as.factor)) %>%
+        tidyr::drop_na(score)
+      return(finalSimpleScores)
+    }
+
+  }
+  else{
+    # choose mean or pop ratio as function to use
+    if(method == "mean ratio"){
+      scoringFunction <- meanRatioScore
+    }
+    else{
+      scoringFunction <- popRatioScore
+    }
+    # mean/pop ratio, total score
+    if(heiComponent == "total score"){
+      demographicGroup <- demo_list[[demographicGroup]]
+
+      scoresTable <- scoringData %>%
+        dplyr::select(demographicGroup) %>%
+        unique()
+      demoVar <- rlang::sym(demographicGroup)
+
+      for(variables in variableList_heiComponents[-c(1)]){
+        scoringDataByVariable <- scoringData %>%
+          dplyr::select(dplyr::contains(variables), dplyr::contains("KCAL"), WTDR2D, demographicGroup) %>%
+          scoringFunction(., variables, demoVar, age[1])
+
+        scoresTable <- scoresTable %>%
+          dplyr::right_join(., scoringDataByVariable, by = colnames(scoresTable)[1]) %>%
+          dplyr::select(demoVar, dplyr::contains("score"))
+        colnames(scoresTable)[length(colnames(scoresTable))] <- paste("score", variables, sep = "_")
+      }
+      scoresTable <- scoresTable %>%
+        dplyr::mutate(score = rowSums(dplyr::across(dplyr::where(is.numeric)))) %>%
+        tidyr::drop_na(score)
+
+      # set order of ageBracket variable
+      if(demographicGroup == "ageBracket"){
+        scoresTable$ageBracket <- factor(scoresTable$ageBracket, levels = c("Toddler (12 - 23 mo.)", "[2,10)", "[10,20)", "[20,30)", "[30,40)", "[40,50)", "[50,60)", "[60,70)", "[70,80)", "80+" ))
+        scoresTable <- scoresTable %>% dplyr::arrange(ageBracket)
+      }
+
+      # set order of income variable
+      else if(demographicGroup == "FAMINC"){
+        scoresTable$FAMINC <- factor(scoresTable$FAMINC, levels = c("[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)", "75000+" ,"[75000, 100000)", ">100000", "<20000", ">20000","Refused","Don't know", "NA"))
+        scoresTable <- scoresTable %>% dplyr::arrange(FAMINC)
+      }
+
+      else if(demographicGroup == "SEX"){
+        scoresTable$SEX = as.factor(scoresTable$SEX)
+      }
+
+      else if(demographicGroup == "RACE_ETH"){
+        scoresTable$RACE_ETH = as.factor(scoresTable$RACE_ETH)
+      }
+
+      return(scoresTable)
+
+      # mean/pop ratio, individual component score
+    }
+    else{demographicGroup <- unlist(demo_list[demographicGroup])
+    finalScoringData <- scoringData %>%
+      dplyr::select(dplyr::contains(scoringVariable), dplyr::contains("KCAL"), WTDR2D, dplyr::contains(demographicGroup))
+
+    demoVar <- colnames(finalScoringData)[length(colnames(finalScoringData))]
+    demoVar <- rlang::sym(demoVar)
+    scoresTable <- scoringFunction(finalScoringData, scoringVariable, demoVar, age[1]) %>%
+      tidyr::drop_na(score)
+
+    # set order of ageBracket variable
+    if(demographicGroup == "ageBracket"){
+      scoresTable$ageBracket <- factor(scoresTable$ageBracket, levels = c("Toddler (12 - 23 mo.)", "[2,10)", "[10,20)", "[20,30)", "[30,40)", "[40,50)", "[50,60)", "[60,70)", "[70,80)", "80+" ))
+      scoresTable <- scoresTable %>% dplyr::arrange(ageBracket)
+    }
+
+    # set order of demographicGroup variable
+    else if(demographicGroup == "FAMINC"){
+      scoresTable$FAMINC <- factor(scoresTable$FAMINC, levels = c("[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)", "75000+" ,"[75000, 100000)", ">100000", "<20000", ">20000","Refused","Don't know", "NA"))
+      scoresTable <- scoresTable %>% dplyr::arrange(FAMINC)
+    }
+
+    else if(demographicGroup == "SEX"){
+      scoresTable$SEX = as.factor(scoresTable$SEX)
+    }
+
+    else if(demographicGroup == "RACE_ETH"){
+      scoresTable$RACE_ETH = as.factor(scoresTable$RACE_ETH)
+    }
+    return(scoresTable)
+    }
+  }
+}
+
+
+### Convert ratio to score ###
+ratioToScore <- function(componentName, componentRatio, ageMin){
+
+  # Choose scoring standards based on population selected
+  if(ageMin < 2){
+    scoringStandards <- HEI_scoring_standards_toddlers
+  }
+  else{
+    scoringStandards <- HEI_scoring_standards
+  }
+
+  if(is.na(componentRatio)){
+    return(NA)
+  }
+
+  componentType <- scoringStandards$component_type[scoringStandards$component == componentName]
+  zeroScore <- scoringStandards$zero_score[scoringStandards$component == componentName]
+  maxPoints <-  scoringStandards$max_points[scoringStandards$component == componentName]
+  maxAmount <-  scoringStandards$max_amount[scoringStandards$component == componentName]
+
+  # Adequacy component scoring
+  if(componentType == "adequacy"){
+    if(componentRatio >= maxAmount){
+      return(maxPoints)
+    }
+    else if(componentRatio <= zeroScore){
+      return(0)
+    }
+    else{
+      return((componentRatio - zeroScore)/(maxAmount - zeroScore) * maxPoints)
+    }
+  }
+
+  # Moderation component scoring
+  else{
+    if(componentRatio <= maxAmount){
+      return(maxPoints)
+    }
+    else if(componentRatio >= zeroScore){
+      return(0)
+    }
+    else{
+      return((zeroScore - componentRatio)/(zeroScore - maxAmount) * maxPoints)
+    }
+  }
+}
+
+### Simple Scoring Function ###
+simpleScore <- function(rawData, scoringVariable, ageMin){
+  simpleScoringData <- rawData %>%
+    dplyr::select(SEQN, WTDR2D, dplyr::contains(scoringVariable), DR1TKCAL, DR2TKCAL, SEX, AGE, RACE_ETH, FAMINC) %>%
+    dplyr::mutate(recall = rowSums(dplyr::select(.,dplyr::contains(scoringVariable)), na.rm = TRUE),
+           KCAL = rowSums(dplyr::across(c(DR1TKCAL, DR2TKCAL)), na.rm = TRUE),
+           ratio = dplyr::case_when(scoringVariable == "TSODI" ~ recall / KCAL,
+                             scoringVariable == "TSFAT" ~ recall * 9 / KCAL * 100,
+                             scoringVariable == "ADD_SUGARS" ~ recall * 16  / KCAL * 100,
+                             scoringVariable == "TFACIDS" ~ recall,
+                             TRUE ~ recall / KCAL * 1000))
+
+  simpleScoringData <- simpleScoringData %>%
+    dplyr::rowwise() %>%
+    dplyr::mutate(score = ratioToScore(scoringVariable, ratio, ageMin)) %>%
+    dplyr::select(SEQN, WTDR2D, SEX, AGE, RACE_ETH, FAMINC, score)
+
+}
+
+### Mean Ratio Function ###
+meanRatioScore <- function(rawData, scoringVariable, scoringDemographicVariable, ageMin){
+
+  meanRatioData <- rawData %>%
+    dplyr::mutate(recall = rowSums(dplyr::select(.,dplyr::contains(scoringVariable)), na.rm = TRUE),
+           KCAL = rowSums(dplyr::across(c(DR1TKCAL, DR2TKCAL)), na.rm = FALSE),
+           ratio = dplyr::case_when(scoringVariable == "TSODI" ~ recall / KCAL,
+                             scoringVariable == "TSFAT" ~ recall * 9 / KCAL * 100,
+                             scoringVariable == "ADD_SUGARS" ~ recall * 16  / KCAL * 100,
+                             scoringVariable == "TFACIDS" ~ recall,
+                             TRUE ~ recall / KCAL * 1000))
+
+  meanRatioByDemo <- meanRatioData %>%
+    dplyr::group_by(!!scoringDemographicVariable) %>%
+    dplyr::summarise(meanRatio = stats::weighted.mean(ratio, WTDR2D, na.rm = TRUE),
+              score = ratioToScore(scoringVariable, meanRatio, ageMin)) %>%
+    dplyr::select(!meanRatio)
+
+  return(meanRatioByDemo)
+
+}
+
+### Population Ratio Function ###
+popRatioScore <- function(rawData, scoringVariable, scoringDemographicVariable, ageMin){
+
+  popRatioData <- rawData %>%
+    tidyr::pivot_longer(cols = dplyr::contains(scoringVariable),
+                 names_to = "day",
+                 values_to = "recall") %>%
+    dplyr::mutate( KCAL = dplyr::case_when(grepl("DR1", day) ~ DR1TKCAL,
+                             TRUE ~ DR2TKCAL)) %>%
+    dplyr::select(recall, KCAL, WTDR2D, scoringDemographicVariable) %>%
+    dplyr::group_by(!!scoringDemographicVariable) %>%
+    dplyr::summarise(meanRecall = stats::weighted.mean(recall, WTDR2D, na.rm = TRUE),
+              meanRecallSugar = stats::weighted.mean(recall*16, WTDR2D, na.rm = TRUE), #wish there was a different
+              meanRecallSatFat = stats::weighted.mean(recall*9, WTDR2D, na.rm = TRUE), #way to do this
+              meanEnergy = stats::weighted.mean(KCAL, WTDR2D, na.rm = TRUE))  %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(ratio = dplyr::case_when(scoringVariable == "TSODI" ~ meanRecall / meanEnergy,
+                             scoringVariable == "TSFAT" ~ meanRecallSatFat / meanEnergy * 100,
+                             scoringVariable == "ADD_SUGARS" ~ meanRecallSugar  / meanEnergy * 100,
+                             scoringVariable == "TFACIDS" ~ meanRecall,
+                             TRUE ~ meanRecall / meanEnergy * 1000)) %>%
+    dplyr::group_by(!!scoringDemographicVariable) %>%
+    dplyr::summarize(score = ratioToScore(scoringVariable, ratio, ageMin))
+
+  return(popRatioData)
+}
