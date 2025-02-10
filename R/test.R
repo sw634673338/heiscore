@@ -69,11 +69,13 @@ head(selectDataset(years = '1718'))
 # Produce 2017-March 2020 Pre-pandemic HEI scores for the Total Fruit component
 # using the Mean Ratio scoring method. Only include white and black women aged
 # 50 to 100. Display the results by race/ethnicity.
-df = score(method = "Simple",
-      years = "1720",
-      component = "Total Fruit")
+#df = score(method = "Simple",
+#      years = "1720",
+#      component = "Total Fruit")
 #> # A tibble: 2 × 2
 #>   RACE_ETH score
 #>   <fct>    <dbl>
 #> 1 Black     3.57
 #> 2 White     3.43
+library(dplyr)
+df_raw$column_name

@@ -30,6 +30,96 @@ dir_security <- path("C:\\work\\OneDrive - purdue.edu\\data\\nhanes\\food_securi
 #dir_demo <- path("D:\\OneDrive\\data\\nhanes\\food_security\\")
 dir_output <- path("C:\\work\\OneDrive - purdue.edu\\work\\RA\\hei_figure\\output")
 
+# load packages
+
+selectDataset <- function(years) {
+  years <- trimws(years)
+  possible_dataset <- get0(paste("fped_", years, sep = ""), envir = asNamespace("heiscore"))
+
+  return(possible_dataset)
+}
+
+#' @import magrittr
+
+cleanDataset <- function(dataset){
+  # keep only subjects that participated and have a valid age (> 1 yr)
+  cleanData <- dataset[dataset$WTDR2D != 0 & dataset$AGE >= 1,] %>%
+    tidyr::drop_na(WTDR2D) %>%
+    dplyr::mutate(
+      # create ageBracket variable
+      ageBracket = dplyr::case_when(
+        AGE < 2 ~ "Toddler (12 - 23 mo.)",
+        AGE >= 2 & AGE < 10 ~ "[2,10)",
+        AGE >= 10 & AGE < 20 ~ "[10,20)",
+        AGE >= 20 & AGE < 30 ~ "[20,30)",
+        AGE >= 30 & AGE < 40 ~ "[30,40)",
+        AGE >= 40 & AGE < 50 ~ "[40,50)",
+        AGE >= 50 & AGE < 60 ~ "[50,60)",
+        AGE >= 60 & AGE < 70 ~ "[60,70)",
+        AGE >= 70 & AGE < 80 ~ "[70,80)",
+        AGE >= 80 ~ "80+"
+      )
+    )
+
+  # convert empty strings to NA values
+  cleanData$FAMINC[is.na(cleanData$FAMINC)] <- "NA"
+
+  return(cleanData)
+}
+
+#' @import magrittr
+
+# filter dataset to only include selected demographic group
+demoFilter <- function(dataset, sex, race_eth, age, fam_income) {
+  filtered_data <- dataset %>%
+    dplyr::filter(SEX %in% sex,
+                  RACE_ETH %in% race_eth,
+                  AGE >= age[1],
+                  AGE <= age[2],
+                  FAMINC %in% fam_income)
+
+  return(filtered_data)
+}
+
+varToComponent <- function(target_name){
+
+  variableList_heiComponents <- list( "Kilocalories" = "KCAL",
+                                      "Total Fruit" = "F_TOTAL",
+                                      "Whole Fruits" = "FWHOLEFRT",
+                                      'Total Vegetables' = 'VTOTALLEG',
+                                      'Greens and Beans' = 'VDRKGRLEG',
+                                      'Whole Grains' = 'G_WHOLE',
+                                      'Total Dairy' = 'D_TOTAL',
+                                      'Total Protein' = 'PFALLPROTLEG',
+                                      'Seafood/Plant Proteins' = 'PFSEAPLANTLEG',
+                                      'Fatty Acids' = 'TFACIDS',
+                                      'Refined Grains' = 'G_REFINED',
+                                      'Sodium' = 'TSODI',
+                                      'Added Sugars' = 'ADD_SUGARS',
+                                      'Saturated Fat' = 'TSFAT')
+
+  demographicList <- list( "Sex" = "SEX",
+                           "Race/Ethnicity" = "RACE_ETH",
+                           "Age" = "ageBracket",
+                           "Family Income" = "FAMINC")
+
+  variable_name <- NULL
+  for (key in names(variableList_heiComponents)) {
+    if (variableList_heiComponents[[key]] == target_name) {
+      variable_name <- key
+      return(variable_name)
+    }
+  }
+  for (key in names(demographicList)) {
+    if (demographicList[[key]] == target_name) {
+      variable_name <- key
+      return(variable_name)
+    }
+  }
+}
+
+
+
 # 1 build index for a component
 component_index <- function(component_selected, year){
 
@@ -37,7 +127,7 @@ component_index <- function(component_selected, year){
   #df <- df_raw %>%
     #select(-starts_with("DR2"))
 
-    df_component <- score(method = "Simple",  years = year,  component = component_selected, dr = 1) # they rename the arguments
+    df_component <- score(method = "Simple",  years = year,  component = component_selected) # they rename the arguments
     # rename column
     new_name <- paste0("HEI_", component_selected)
     df_component <- df_component %>%
@@ -50,80 +140,6 @@ component_index <- function(component_selected, year){
     return(df_component)
 }
 
-# they also rename it into lower case
-#component_list <- c("Total Score","Total Fruit","Whole Fruits","Total Vegetables",
-#    "Greens and Beans","Whole Grains","Total Dairy", "Total Protein",
-#    "Seafood and Plant Proteins", "Fatty Acids", "Refined Grains",
-#    "Sodium", "Added Sugars", "Saturated Fat")
-component_list <- c("total score","total fruit","whole fruits","total vegetables",
-    "greens and beans","whole grains","total dairy", "total protein",
-    "seafood and plant proteins", "fatty acids", "refined grains",
-    "sodium", "added sugars", "saturated fat")
-#YEARS <- c("0506", "0708", "0910", "1112", "1314", "1516", "1718")
-
-YEARS <- c("1718")
-
-#demo <- read_xpt("D:\\OneDrive\\data\\nhanes\\1718\\DEMO_J.XPT")
-#test2 <- read_xpt("D:\\OneDrive\\data\\nhanes\\2017-2018\\DR2IFF_J.XPT")
-
-
-
-# RUN
-for (year in YEARS){
-    # Load NHANCE datasets
-    # we can pick DAY1 or DAY2 or BOTH
-    df_raw = selectDataset(year = year)
-    df <- df_raw %>%
-    select(SEQN)
-    # build index and merge the data
-    for (component_selected in component_list) {
-        df_one = component_index(component_selected, year)
-        df <- left_join(df, df_one, by = "SEQN")
-    }
-    #merge demographic variables
-    file_name <- dir_demo / paste0("DEMO_",
-    year, ".XPT")
-
-    demo <- read_xpt(file_name)
-    df <- left_join(df, demo, by = "SEQN")
-
-    #merge food security variables
-    file_name <- dir_security / paste0("FSQ_",
-    year, ".XPT")
-    demo <- read_xpt(file_name)
-    df <- left_join(df, demo, by = "SEQN")
-
-    # Modify variable names: make them lowercase and remove spaces
-    names(df) <- names(df) %>%
-    tolower() %>%
-    str_replace_all(" ", "_")
-
-    # write csv file
-    #file_name <- paste0(year, "nhanes_hei.csv")
-    #write.csv(df, file_name, row.names = FALSE)
-
-
-
-    # write dta
-    #stata_name <- dir_output / paste0(year, "nhanes_hei.dta")
-    #write_dta(df, stata_name)#, row.names = FALSE)
-}
-#test = selectDataset("1718")
-#column_names <- names(test)
-
-
-
-#df_defaultHEI <- df #it's a deep copy
-############ WAIT FOR IT ####################
-# RUN the deep copy, then drop "DR2" calcuate
-
-# Step 3: attatch datasets from different years
-# wait for it
-#df['a'] <- 1
-
-#' Calculate Healthy Eating Index (HEI) scores from NHANES data
-
-#' This function calculates HEI component or total scores using the inputted scoring method. The user can subset the data to only include subjects in specific demographic groups
 
 score <- function(method, years, component, demo = NULL, sex = c("Female", "Male"), race = c("Asian", "White", "Black", "Other", "Mexican American", "Other Hispanic"), age = c(2, 100), income = c("[0, 5000)","[5000, 10000)","[10000, 15000)","[15000, 20000)","[20000, 25000)","[25000, 35000)", "[35000, 45000)","[45000, 55000)","[55000, 65000)","[65000, 75000)","[75000, 100000)", "75000+",">100000", ">20000","<20000","Refused","Don't know", "NA")){
 
@@ -487,3 +503,80 @@ popRatioScore <- function(rawData, scoringVariable, scoringDemographicVariable, 
 
   return(popRatioData)
 }
+
+
+
+# they also rename it into lower case
+#component_list <- c("Total Score","Total Fruit","Whole Fruits","Total Vegetables",
+#    "Greens and Beans","Whole Grains","Total Dairy", "Total Protein",
+#    "Seafood and Plant Proteins", "Fatty Acids", "Refined Grains",
+#    "Sodium", "Added Sugars", "Saturated Fat")
+component_list <- c("total score","total fruit","whole fruits","total vegetables",
+    "greens and beans","whole grains","total dairy", "total protein",
+    "seafood and plant proteins", "fatty acids", "refined grains",
+    "sodium", "added sugars", "saturated fat")
+#YEARS <- c("0506", "0708", "0910", "1112", "1314", "1516", "1718")
+
+YEARS <- c("1718")
+
+#demo <- read_xpt("D:\\OneDrive\\data\\nhanes\\1718\\DEMO_J.XPT")
+#test2 <- read_xpt("D:\\OneDrive\\data\\nhanes\\2017-2018\\DR2IFF_J.XPT")
+
+
+
+# RUN
+for (year in YEARS){
+    # Load NHANCE datasets
+    # we can pick DAY1 or DAY2 or BOTH
+    df_raw = selectDataset(year = year)
+    df <- df_raw %>%
+    select(SEQN)
+    # build index and merge the data
+    for (component_selected in component_list) {
+        df_one = component_index(component_selected, year)
+        df <- left_join(df, df_one, by = "SEQN")
+    }
+    #merge demographic variables
+    file_name <- dir_demo / paste0("DEMO_",
+    year, ".XPT")
+
+    demo <- read_xpt(file_name)
+    df <- left_join(df, demo, by = "SEQN")
+
+    #merge food security variables
+    file_name <- dir_security / paste0("FSQ_",
+    year, ".XPT")
+    demo <- read_xpt(file_name)
+    df <- left_join(df, demo, by = "SEQN")
+
+    # Modify variable names: make them lowercase and remove spaces
+    names(df) <- names(df) %>%
+    tolower() %>%
+    str_replace_all(" ", "_")
+
+    # write csv file
+    #file_name <- paste0(year, "nhanes_hei.csv")
+    #write.csv(df, file_name, row.names = FALSE)
+
+
+
+    # write dta
+    #stata_name <- dir_output / paste0(year, "nhanes_hei.dta")
+    #write_dta(df, stata_name)#, row.names = FALSE)
+}
+#test = selectDataset("1718")
+#column_names <- names(test)
+
+
+
+#df_defaultHEI <- df #it's a deep copy
+############ WAIT FOR IT ####################
+# RUN the deep copy, then drop "DR2" calcuate
+
+# Step 3: attatch datasets from different years
+# wait for it
+#df['a'] <- 1
+
+#' Calculate Healthy Eating Index (HEI) scores from NHANES data
+
+#' This function calculates HEI component or total scores using the inputted scoring method. The user can subset the data to only include subjects in specific demographic groups
